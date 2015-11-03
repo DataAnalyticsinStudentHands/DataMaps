@@ -5,18 +5,16 @@ var logger = Meteor.npmRequire('winston'); // this retrieves default logger whic
 
 var exportDataAsCSV = Meteor.bindEnvironment(function (aqsid, startEpoch, endEpoch) {
 
-    
     var dir = Monitors.find({
         AQSID: aqsid
     }).fetch()[0];
- 
-    
+
     if (dir !== undefined) {
 
         //output folder
         var siteName = dir.incoming.match(/[^_]*/);
         var outputFile = '/hnet/outgoing/2015/' + dir.incoming + '/' + siteName + moment.unix(startEpoch).format('YYMMDDHHmmss') + '.txt';
-            
+
         var aggregatData = AggrData.find({
             $and: [{
                 site: aqsid
@@ -30,7 +28,7 @@ var exportDataAsCSV = Meteor.bindEnvironment(function (aqsid, startEpoch, endEpo
                 }
         }]
         }).fetch();
-        
+
         var dataObject = [];
 
         _.each(aggregatData, function (e) {
@@ -51,8 +49,6 @@ var exportDataAsCSV = Meteor.bindEnvironment(function (aqsid, startEpoch, endEpo
             obj.QCstatus_value = 99000;
             dataObject.push(obj);
         });
-
-        logger.info('dataObject: ', dataObject);
 
         converter.json2csv(dataObject, function (err, csv) {
             if (err) {

@@ -6,15 +6,10 @@ var logger = Meteor.npmRequire('winston'); // this retrieves default logger whic
 
 var perform5minAggregat = function (siteId, timeChosen) {
 
-    var siteChosen = new RegExp('^' + siteId);
-    var timeChose = new RegExp('^' + timeChosen);
-
     var pipeline = [
         {
             $match: {
-                site: {
-                    $regex: siteChosen
-                }
+                site: siteId
             }
         },
         {
@@ -47,7 +42,7 @@ var perform5minAggregat = function (siteId, timeChosen) {
                     subObj.site = e.site;
                     subObj.epoch = e._id;
                     var metrons = e.nuisance;
-                    for (i = 0; i < metrons.length; i++) {
+                    for (var i = 0; i < metrons.length; i++) {
                         for (var newkey in metrons[i]) {
                             if (metrons[i][newkey][1]['metric'] === "Flag" && metrons[i][newkey][1]['val'] === 1) {
                                 if (!subObj[newkey]) {
@@ -56,7 +51,7 @@ var perform5minAggregat = function (siteId, timeChosen) {
                                         'avg': metrons[i][newkey][0]['val'],
                                         'variance': 0.0,
                                         'stdDev': 0.0,
-                                        'numValid': parseInt(1),
+                                        'numValid': parseInt(1, 10),
                                         'Flag': 1
                                     };
                                 } else {
@@ -173,44 +168,27 @@ var readFile = function (path) {
     });
 };
 
-//Meteor.setInterval(function () {
-//    var siteId = '481670571';
-//    var epochNow = (new Date()).getTime(); //passing epoch as most recent? 
-//    var timeChosen = epochNow - (epochNow % 300000);
-//    perform5minAggregat(siteId, timeChosen);
-//}, 300000); //every five minutes
-
-Meteor.methods({ //make own file???
-    getCurrentTime: function () {
-        console.log('on server, getCurrentTime called');
-        return new Date();
-    },
-    welcome: function (name) {
-        console.log('on server, welcome called with name: ', name);
-        if (name == undefined || name.length <= 0) {
-            throw new Meteor.Error(404, "Please enter your name");
-        }
-        return "Welcome " + name;
-    },
+Meteor.methods({
     new5minAggreg: function (siteId, timeChosen) {
-        console.log('on server, perform5monAggreg called for site: ', siteId, ' and epoch: ', timeChosen);
         perform5minAggregat(siteId, timeChosen);
     }
-}); //end methods
+});
+
+//Meteor.setInterval(function () {
+//    
+//    var nowEpoch = moment().unix();
+//    
+//    //hardcoded, should be replaced with something more flexible
+//    perform5minAggregat('481670571', nowEpoch);
+//    perform5minAggregat('482010572', nowEpoch);
+//    perform5minAggregat('482010570', nowEpoch);
+//}, 300000); //every five minutes
 
 //can be used when server starts up to read existing files in the directory,
 //this can be slow if there are a lot of files to process
-var initialRead = function (directory) {
-    fs.readdir(directory, function (err, files) {
-        if (err) {
-            return;
-        }
-        files.forEach(function (f) {
-            var path = directory + f;
-            logger.info('initialRead found file: ', path);
-            readFile(path);
-        });
-    });
+var initialRead = function (path) {
+    logger.info('initialRead found file: ', path);
+    readFile(path);
 };
 
 var liveWatcher = chokidar.watch('/hnet/incoming/2015', {
@@ -236,6 +214,8 @@ liveWatcher
         logger.error('Error happened', error);
     })
     .on('ready', function () {
-        //initialRead('/hnet/incoming/2015/UHCCH_DAQData/');
+        initialRead('/hnet/incoming/2015/UHCCH_DAQData/HNET_CCH_TCEQ_151103.txt');
+        initialRead('/hnet/incoming/2015/UHCBH_DAQData/HNET_CBH_TCEQ_151103.txt');
+        initialRead('/hnet/incoming/2015/UHCLH_DAQData/HNET_CLH_TCEQ_151103.txt');
         logger.info('Ready for changes in /hnet/incoming/2015/UHCCH_DAQData/.');
     });

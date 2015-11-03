@@ -17,7 +17,7 @@ Template.passData.result = function () {
 
 Template.passData.events = {
     'click #passDataResult': function () {
-        Meteor.call('new5minAggreg', 481670571, $('input[type=text]').val(), function (err, response) {
+        Meteor.call('new5minAggreg', $('input[type=text]').val(), moment().unix(), function (err, response) {
             if (err) {
                 Session.set('serverDataResponse', 'Error:' + err.reason);
                 return;
