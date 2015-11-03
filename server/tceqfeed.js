@@ -94,48 +94,5 @@ TCEQwatcher
         logger.error('Error happened', error);
     })
     .on('ready', function () {
-
-        //Upcert existing data, should only be used when 
-        //starting up the server with files already in the watched folder
-        /*var dir = Meteor.npmRequire('node-dir');
-        dir.files('/hnet/incoming/TCEQ', function (err, files) {
-            if (err) {
-                throw err;
-            }
-            _.each(files, function (path) {
-                var pathArray = path.split('/');
-                var fileName = pathArray[pathArray.length - 1];
-                fs.readFile(path, 'utf-8', function (err, output) {
-                    csvmodule.parse(output, {
-                        delimiter: '|',
-                        rowDelimiter: '\n',
-                        auto_parse: true,
-                        columns: ['siteRef', 'timeStamp', 'param', 'poc', 'method', 'units', 'value', 'flag', 'verified', 'slope', 'intercept', 'sample']
-                    }, function (err, siteInfo) {
-                        if (err) {
-                            logger.error(err.message);
-                        }
-                        _.each(siteInfo, function (line) {
-                            line.fileName = fileName;
-                            tceqDataUpsert(line);
-                        });
-                    });
-                });
-
-                var newPath = '/hnet/archive/TCEQ/' + fileName;
-                logger.info('Will move to: ', newPath);
-                fs.rename(path, newPath, function (err) {
-                    if (err) {
-                        if (err.code === 'EXDEV') {
-                            logger.error(err.message);
-                        } else {
-                            callback(err);
-                        }
-                        return;
-                    }
-                });
-            });
-        });*/
-        //Default
-        logger.info('Initial scan of /hnet/incoming/TCEQ complete. Ready for changes');
+        logger.info('Ready for changes in /hnet/incoming/TCEQ.');
     });

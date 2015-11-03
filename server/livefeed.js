@@ -2,7 +2,7 @@
 var chokidar = Meteor.npmRequire('chokidar');
 var csvmodule = Meteor.npmRequire('csv');
 var fs = Meteor.npmRequire('fs');
-var logger = Meteor.npmRequire('winston'); // this retrieves default logger which was configured in log.js
+var logger = Meteor.npmRequire('winston'); // this retrieves default logger which was configured in server.js
 
 var perform5minAggregat = function (siteId, timeChosen) {
 
@@ -43,8 +43,9 @@ var perform5minAggregat = function (siteId, timeChosen) {
             function (err, result) {
                 _.each(result, function (e) {
                     var subObj = {};
-                    subObj._id = e._id;
+                    subObj._id = e.site + '_' + e._id;
                     subObj.site = e.site;
+                    subObj.epoch = e._id;
                     var metrons = e.nuisance;
                     for (i = 0; i < metrons.length; i++) {
                         for (var newkey in metrons[i]) {
@@ -236,5 +237,5 @@ liveWatcher
     })
     .on('ready', function () {
         //initialRead('/hnet/incoming/2015/UHCCH_DAQData/');
-        logger.info('Initial scan for /hnet/incoming/2015/UHCCH_DAQData/ complete. Ready for changes.');
+        logger.info('Ready for changes in /hnet/incoming/2015/UHCCH_DAQData/.');
     });
