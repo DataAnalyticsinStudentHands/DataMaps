@@ -14,7 +14,7 @@ var exportDataAsCSV = Meteor.bindEnvironment(function (aqsid, startEpoch, endEpo
         //output folder
         var siteName = dir.incoming.match(/[^_]*/);
         var outputFile = '/hnet/outgoing/2015/' + dir.incoming + '/' + siteName + moment.unix(startEpoch).format('YYMMDDHHmmss') + '.txt';
-
+        
         var aggregatData = AggrData.find({
             $and: [{
                 site: aqsid
@@ -30,10 +30,10 @@ var exportDataAsCSV = Meteor.bindEnvironment(function (aqsid, startEpoch, endEpo
         }).fetch();
 
         var dataObject = [];
+        logger.info('Data: ', dataObject);
 
         _.each(aggregatData, function (e) {
             var obj = {};
-
             obj.siteID = e.site;
             obj.dateGMT = moment.unix(e.epoch).format('YY/MM/DD');
             obj.timeGMT = moment.utc(moment.unix(e.epoch)).format('HH:mm:ss');
@@ -54,7 +54,7 @@ var exportDataAsCSV = Meteor.bindEnvironment(function (aqsid, startEpoch, endEpo
             if (err) {
                 console.log(err);
             }
-            console.log(csv);
+            //console.log(csv);
             fs.writeFile(outputFile, csv, function (err) {
                 if (err) {
                     throw err;
@@ -69,7 +69,8 @@ var exportDataAsCSV = Meteor.bindEnvironment(function (aqsid, startEpoch, endEpo
 });
 
 Meteor.methods({
-    exportData: function (startEpoch, endEpoch) {
-        exportDataAsCSV('481670571', startEpoch, endEpoch);
+    exportData: function (site, startEpoch, endEpoch) {
+        logger.info('Helper called for site: ', site, ' and start: ', startEpoch, ' and end: ', endEpoch);
+        exportDataAsCSV(site, startEpoch, endEpoch);
     }
 });

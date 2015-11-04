@@ -4,7 +4,7 @@ var csvmodule = Meteor.npmRequire('csv');
 var fs = Meteor.npmRequire('fs');
 var logger = Meteor.npmRequire('winston'); // this retrieves default logger which was configured in server.js
 
-var perform5minAggregat = function (siteId, timeChosen) {
+var perform5minAggregat = function (siteId, startTime, endTime) {
 
     var pipeline = [
         {
@@ -24,10 +24,10 @@ var perform5minAggregat = function (siteId, timeChosen) {
             $group: {
                 _id: '$epoch5min',
                 site: {
-                    $last: "$site"
+                    $last: '$site'
                 },
                 nuisance: {
-                    $push: "$subTypes.metrons"
+                    $push: '$subTypes.metrons'
                 }
             }
         }
@@ -44,7 +44,7 @@ var perform5minAggregat = function (siteId, timeChosen) {
                     var metrons = e.nuisance;
                     for (var i = 0; i < metrons.length; i++) {
                         for (var newkey in metrons[i]) {
-                            if (metrons[i][newkey][1]['metric'] === "Flag" && metrons[i][newkey][1]['val'] === 1) {
+                            if (metrons[i][newkey][1].metric === 'Flag' && metrons[i][newkey][1].val === 1) {
                                 if (!subObj[newkey]) {
                                     subObj[newkey] = {
                                         'sum': metrons[i][newkey][0]['val'],
@@ -73,13 +73,11 @@ var perform5minAggregat = function (siteId, timeChosen) {
                         subObj, {
                             upsert: true
                         });
-                    //console.log(subObj)
-                    //I turned off schema in data.js
                 });
 
             },
             function (error) {
-                Meteor._debug("error during aggregation: " + error);
+                Meteor._debug('error during aggregation: ' + error);
             }
         )
     );
@@ -170,6 +168,7 @@ var readFile = function (path) {
 
 Meteor.methods({
     new5minAggreg: function (siteId, timeChosen) {
+        logger.info('Helper called 5minAgg');
         perform5minAggregat(siteId, timeChosen);
     }
 });
@@ -214,8 +213,8 @@ liveWatcher
         logger.error('Error happened', error);
     })
     .on('ready', function () {
-        initialRead('/hnet/incoming/2015/UHCCH_DAQData/HNET_CCH_TCEQ_151103.txt');
-        initialRead('/hnet/incoming/2015/UHCBH_DAQData/HNET_CBH_TCEQ_151103.txt');
-        initialRead('/hnet/incoming/2015/UHCLH_DAQData/HNET_CLH_TCEQ_151103.txt');
+        //initialRead('/hnet/incoming/2015/UHCCH_DAQData/HNET_CCH_TCEQ_151103.txt');
+        //initialRead('/hnet/incoming/2015/UHCBH_DAQData/HNET_CBH_TCEQ_151103.txt');
+        //initialRead('/hnet/incoming/2015/UHCLH_DAQData/HNET_CLH_TCEQ_151103.txt');
         logger.info('Ready for changes in /hnet/incoming/2015/UHCCH_DAQData/.');
     });
