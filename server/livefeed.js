@@ -15,9 +15,8 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
         {
             $project: {
                 epoch5min: 1,
-                epoch: 1,
                 site: 1,
-                'subTypes.metrons': 1
+                subTypes: 1
             }
         },
         {
@@ -26,9 +25,7 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                 site: {
                     $last: '$site'
                 },
-                nuisance: {
-                    $push: '$subTypes.metrons'
-                }
+                subTypes: '$subTypes'
             }
         }
      ];
@@ -41,34 +38,35 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                     subObj._id = e.site + '_' + e._id;
                     subObj.site = e.site;
                     subObj.epoch = e._id;
-                    var metrons = e.nuisance;
-                    for (var i = 0; i < metrons.length; i++) {
-                        for (var newkey in metrons[i]) {
-                            if (metrons[i][newkey][1].metric === 'Flag' && metrons[i][newkey][1].val === 1) {
-                                
-                                    if (!subObj[newkey]) {
-                                    subObj[newkey] = {
-                                        'sum': metrons[i][newkey][0]['val'],
-                                        'avg': metrons[i][newkey][0]['val'],
-                                        'variance': 0.0,
-                                        'stdDev': 0.0,
-                                        'numValid': parseInt(1, 10),
-                                        'Flag': 1
-                                    };
-                                } else {
-                                    subObj[newkey]['numValid'] += 1;
-                                    subObj[newkey]['sum'] += metrons[i][newkey][0]['val']; //holds sum until end
-                                    subObj[newkey]['avg'] = subObj[newkey]['sum'] / subObj[newkey]['numValid'];
-                                    subObj[newkey]['variance'] += Math.pow((metrons[i][newkey][0]['val'] - subObj[newkey]['avg']), 2);
+                    subObj.subTypes = {};
+                    subObj.test = e;
+                    var instruments = e.subTypes;
+                    for (var instrument in instruments) { //loop over all instruments
+                        var subType = {};
+                        if (instrument.hasOwnProperty('Flag')) { //check for Flag
+                            if (instrument.Flag === 1) { //valid only?
+                                for (var measurement in instrument) { //loop over all measurements
+                                    if (measurement.key !== 'Flag') { //except Flag
+                                        if (!subType[measurement]) {
+                                            subType[measurement] = {
+                                                'sum': measurement,
+                                                'avg': measurement,
+                                                'numValid': parseInt(1, 10),
+                                                'Flag': 1
+                                            };
+                                        } else {
+                                            subType[measurement].numValid += 1;
+                                            subType[measurement].sum += measurement; 
+                                            subType[measurement].avg = subType[measurement].sum / subType[measurement].numValid;                     
+                                        }
+                                        if (subType[measurement].numValid < 23) {
+                                            subType[measurement].Flag = 0; //should discuss how to use
+                                        }
+                                    }
                                 }
-                                subObj[newkey]['stdDev'] = Math.sqrt(subObj[newkey]['variance']);
-                                if ((subObj[newkey]['numValid'] / i) < .75) {
-                                    subObj[newkey]['Flag'] = 0; //should discuss how to use
-                                }
-                                
-                                
                             }
                         }
+                        subObj.subTypes = 'hallo';
                     }
                     AggrData.update({
                             _id: subObj._id
@@ -95,8 +93,8 @@ var liveDataUpsert = Meteor.bindEnvironment(function (path, obj) {
     var site = Monitors.find({
         incoming: parentDir
     }).fetch()[0];
-
-    if (obj.epoch > 0) {
+    
+    if (obj.epoch > 0 && site.AQSID) {
         LiveData.upsert({
             _id: site.AQSID + '_' + obj.epoch
         }, {
@@ -146,7 +144,6 @@ var write10Sec = function (path, arr) {
 };
 
 var readFile = function (path) {
-    
 
     fs.readFile(path, 'utf-8', function (err, output) {
         csvmodule.parse(output, {
