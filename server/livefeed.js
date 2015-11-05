@@ -45,7 +45,8 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                     for (var i = 0; i < metrons.length; i++) {
                         for (var newkey in metrons[i]) {
                             if (metrons[i][newkey][1].metric === 'Flag' && metrons[i][newkey][1].val === 1) {
-                                if (!subObj[newkey]) {
+                                
+                                    if (!subObj[newkey]) {
                                     subObj[newkey] = {
                                         'sum': metrons[i][newkey][0]['val'],
                                         'avg': metrons[i][newkey][0]['val'],
@@ -64,6 +65,8 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                                 if ((subObj[newkey]['numValid'] / i) < .75) {
                                     subObj[newkey]['Flag'] = 0; //should discuss how to use
                                 }
+                                
+                                
                             }
                         }
                     }
@@ -85,10 +88,12 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
 
 //insert live data into DB; _id is site_epoch
 //obj has subTypes, epoch5min
-var liveDataUpsert = Meteor.bindEnvironment(function (dir, obj) {
+var liveDataUpsert = Meteor.bindEnvironment(function (path, obj) {
+    var pathArray = path.split('/');
+    var parentDir = pathArray[pathArray.length - 2];
 
     var site = Monitors.find({
-        incoming: dir
+        incoming: parentDir
     }).fetch()[0];
 
     if (obj.epoch > 0) {
@@ -97,6 +102,7 @@ var liveDataUpsert = Meteor.bindEnvironment(function (dir, obj) {
         }, {
             epoch: obj.epoch,
             epoch5min: obj.epoch5min,
+            file: pathArray[pathArray.length - 1],
             site: site.AQSID,
             subTypes: obj.subTypes,
             theTime: obj.theTime
@@ -106,9 +112,8 @@ var liveDataUpsert = Meteor.bindEnvironment(function (dir, obj) {
 
 var makeObj = function (keys) {
     var obj = {};
-    obj.subTypes = {};
-    obj.subTypes.metrons = {};
     var metron = [];
+    obj.subTypes = {};
     for (var key in keys) {
         if (keys.hasOwnProperty(key)) {
             var subKeys = key.split('_');
@@ -118,13 +123,11 @@ var makeObj = function (keys) {
                 var metrized = key.replace(alphaSite + '_', '');
                 metron = metrized.replace('_' + metric, ''); //wind, O3, etc.
                 var val = keys[key];
-                if (!obj.subTypes.metrons[metron]) {
-                    obj.subTypes.metrons[metron] = [{
-                        metric: metric,
-                        val: val
-                }];
+                if (!obj.subTypes.hasOwnProperty(metron)) {
+                    obj.subTypes[metron][metric] = val;
+                };
                 } else {
-                    obj.subTypes.metrons[metron].push({
+                    obj.subTypes[metron].push({
                         metric: metric,
                         val: val
                     });
@@ -136,20 +139,19 @@ var makeObj = function (keys) {
     return obj;
 };
 
-var write10Sec = function (dir, arr) {
+var write10Sec = function (path, arr) {
     for (var k = 0; k < arr.length; k++) {
         var singleObj = makeObj(arr[k]);
         var epoch = ((arr[k].TheTime - 25569) * 86400) + 6 * 3600;
         singleObj.epoch = epoch - (epoch % 1); //rounding down
         singleObj.epoch5min = epoch - (epoch % 300);
         singleObj.theTime = arr[k].TheTime;
-        liveDataUpsert(dir, singleObj);
+        liveDataUpsert(path, singleObj);
     }
 };
 
 var readFile = function (path) {
-    var pathArray = path.split('/');
-    var parentDir = pathArray[pathArray.length - 2];
+    
 
     fs.readFile(path, 'utf-8', function (err, output) {
         csvmodule.parse(output, {
@@ -161,7 +163,7 @@ var readFile = function (path) {
             if (err) {
                 logger.error(err);
             }
-            write10Sec(parentDir, parsedLine);
+            write10Sec(path, parsedLine);
         });
     });
 };
