@@ -124,14 +124,9 @@ var makeObj = function (keys) {
                 metron = metrized.replace('_' + metric, ''); //wind, O3, etc.
                 var val = keys[key];
                 if (!obj.subTypes.hasOwnProperty(metron)) {
-                    obj.subTypes[metron][metric] = val;
-                };
-                } else {
-                    obj.subTypes[metron].push({
-                        metric: metric,
-                        val: val
-                    });
+                    obj.subTypes[metron] = {};
                 }
+                obj.subTypes[metron][metric] = val;
             }
         }
     }
