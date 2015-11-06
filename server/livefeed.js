@@ -15,6 +15,7 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
         {
             $project: {
                 epoch5min: 1,
+                epoch: 1,
                 site: 1,
                 subTypes: 1
             }
@@ -25,7 +26,9 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                 site: {
                     $last: '$site'
                 },
-                subTypes: '$subTypes'
+                subTypes: {
+                    $push: '$subTypes'
+                }
             }
         }
      ];
