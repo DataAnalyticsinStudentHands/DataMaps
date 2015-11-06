@@ -113,8 +113,8 @@ var liveDataUpsert = Meteor.bindEnvironment(function (path, obj) {
 
 var makeObj = function (keys) {
     var obj = {};
-    var metron = [];
     obj.subTypes = {};
+    var metron = [];
     for (var key in keys) {
         if (keys.hasOwnProperty(key)) {
             var subKeys = key.split('_');
@@ -124,10 +124,17 @@ var makeObj = function (keys) {
                 var metrized = key.replace(alphaSite + '_', '');
                 metron = metrized.replace('_' + metric, ''); //wind, O3, etc.
                 var val = keys[key];
-                if (!obj.subTypes.hasOwnProperty(metron)) {
-                    obj.subTypes[metron] = {};
+                if (!obj.subTypes[metron]) {
+                    obj.subTypes[metron] = [{
+                        metric: metric,
+                        val: val
+                }];
+                } else {
+                    obj.subTypes[metron].push({
+                        metric: metric,
+                        val: val
+                    });
                 }
-                obj.subTypes[metron][metric] = val;
             }
         }
     }
