@@ -9,7 +9,7 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
     var pipeline = [
         {
             $match: {
-                site: '482010570'
+                site: siteId
             }
         },
         {
@@ -40,7 +40,7 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                     var subObj = {};
                     subObj._id = e.site + '_' + e._id;
                     subObj.site = e.site;
-                    subObj.epoch = e.epoch5min;
+                    subObj.epoch = e._id;
                     var metrons = e.subTypes;
                     for (var i = 0; i < metrons.length; i++) {
                         for (var newkey in metrons[i]) {
@@ -167,7 +167,7 @@ var readFile = function (path) {
 
 Meteor.methods({
     new5minAggreg: function (siteId, timeChosen) {
-        logger.info('Helper called 5minAgg');
+        logger.info('Helper called 5minAgg for site: ', siteId);
         perform5minAggregat(siteId, timeChosen);
     }
 });
