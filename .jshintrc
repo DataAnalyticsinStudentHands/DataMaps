@@ -103,6 +103,7 @@
         "Favorites": false,
         "LiveData": false,
         "TCEQData": false,
-        "AggrData": false
+        "AggrData": false,
+        "self": false
     }
 }

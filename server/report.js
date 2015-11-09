@@ -54,11 +54,11 @@ Meteor.setInterval(function () {
     setTimeout(function () {
         if (emergencyReportString !== '') {
             logger.info(emergencyReportString);
-           // sendEmail('EMERGENCY Report', emergencyReportString);
+            sendEmail('EMERGENCY Report', emergencyReportString);
         }
         if (moment() - lastPeriodicReportTime >= 30 * 60 * 1000) {
             logger.info(periodicReportString);
-           // sendEmail('Site\'s periodic report', periodicReportString);
+            sendEmail('Site\'s periodic report', periodicReportString);
             lastPeriodicReportTime = moment();
         }
     }, 2000);

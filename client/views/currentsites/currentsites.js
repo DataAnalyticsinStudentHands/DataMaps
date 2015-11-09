@@ -16,88 +16,91 @@ Template.currentsites.onRendered(function (){
 	    site = new ReactiveVar();
 	    time2find = new ReactiveVar();
 		var subTypName = new ReactiveVar();
-	    site.set('481670570'); 
-	    var nowEpoch = moment("2015-11-03").subtract(3, 'days').unix();//'144644488'; //testing
-	    var nowDown = nowEpoch - (nowEpoch % 10);
-	    var fiveDown = nowDown - (nowDown % 300);
-	    var hourDown = nowDown - (nowDown % 3600);
+	    site.set('482010572'); 
+	    var nowEpoch = moment('2015-11-08').subtract(0, 'days').unix();//'144644488'; //testing
 	    //var dayDown = (nowDown - 86400) - ((nowDown - 86400) % 3600);
-	    time2find.set(hourDown);  //for testing 5196299900000 (uh)/5196294320000 /laptop
+	    time2find.set(nowEpoch);  //for testing 5196299900000 (uh)/5196294320000 /laptop
 	    timeChosen = time2find.get();
 	    timeChosenStr = timeChosen;//.toString();//.replace(/0+$/,'');
-	    subTypName.set('O3') //have in reactiveVar for selection
+	    subTypName.set('O3'); //have in reactiveVar for selection
 	    Meteor.subscribe('aggregatedata5min',site.get(),timeChosenStr,subTypName.get());
 		pollutCursor5 = AggrData.find({});
         console.log(pollutCursor5);
 	    Meteor.subscribe('livedata',site.get(),timeChosenStr,subTypName.get());
 		//pollutCursor = LiveData.find({},{subTypes:1,_id:0},{limit: 10}); //why not only subTypes???
 		pollutCursor = LiveData.find({});
-		dataSets = new ReactiveVar(); //seems like ReactiveVar is a lot faster for retrieval
-		dataFlags = new ReactiveVar();
-		dataSets5 = new ReactiveVar(); 
-		dataFlags5 = new ReactiveVar();
+		dataSets = new ReactiveDict(); //seems like ReactiveVar is a lot faster for retrieval
+		dataFlags = new ReactiveDict();
+		dataSets5 = new ReactiveDict(); 
+		dataFlags5 = new ReactiveDict();
 		
 		dataPacks = new ReactiveDict();
         dataSeriesVar = new ReactiveVar();
 		dataSeries = function(metron){
-			return dataPacks.get(metron)
+			return dataPacks.get(metron);
 		};
-        var metronTest = 'O3_conc'
-		dataSeriesVar.set(metronTest)//;chart.series[0].setData([dataSeriesVar]);
+        var metronTest = 'O3_conc';
+		dataSeriesVar.set(metronTest);//;chart.series[0].setData([dataSeriesVar]);
 		// dataIngraph = {};
  		pollutCursor5.forEach(function(line){ //should only be one - not sure why I can't get it more directly
- 			console.time('pollutCursor54each')
-            console.log('entered pollut5')
+ 			console.time('pollutCursor54each');
+            console.log('entered pollut5');
  			_.each(line, function (key) {
  				var bottomObj5 = {};
  				if (key.data){
  					if (!bottomObj5[key]){
  						bottomObj5[key] = {};
- 					};
-                    if (key.name == 'Flag'){
-                        dataFlags5.set(key.data);
-                    };
-                    if (key.name == "avg"){
-                        dataSets5.set(key.data);
-                    };
+ 					}
+                    if (key.name === 'Flag'){
+                        //console.log('flag5',line)
+                        dataFlags5.set('O3',key.data);
+                    }
+                    if (key.name === 'avg'){
+                        dataSets5.set('O3',key.data);
+                    }
  					}
  				 });
- 			 console.timeEnd('pollutCursor54each')
+ 			 console.timeEnd('pollutCursor54each');
  		 });
 		pollutCursor.forEach(function(line){ //should only be one - not sure why I can't get it more directly
-			console.time('pollutCursor4each')
+			console.time('pollutCursor4each');
 			_.each(line, function (key) {
+                
 				var bottomObj = {};
 				if (key.data){
 					 //key.name is the pollutant name
 					 //key.data has it's own stuff
-					if (!bottomObj[key]){
-						bottomObj[key] = {};
-					}
+//					if (!bottomObj[key]){
+//						bottomObj[key] = {};
+//					}
 					_.each(key.data, function (subKey,subKeyname) {
 						if (subKey.vals){
-							bottomObj[key][subKeyname] = subKey.vals;
+                            dataSets.set(key.name+'_'+subKeyname,subKey.vals);
+//                            console.log('gfd',key.name+'_'+subKeyname)
+//							bottomObj[key+'_'+subKeyname] = subKey.vals;
 							// console.log('subKey',subKey)//  subKey is and object
 							// console.log('subKeyname',subKeyname)// i.e., Temp, Flag, Direction
 							//if (key.name=='O3' && subKeyname=='conc'){
-                            if (subKeyname=='conc'){ //if only subKeyTyp has data?
-								dataSets.set(subKey.vals);
-							}
-							if (subKeyname=='Flag'){
-								dataFlags.set(subKey.vals);
-							}
+//                            if (subKeyname=='conc'){ //if only subKeyTyp has data?
+//								dataSets.set(key.name,subKey.vals);
+//							}
+//							if (subKeyname=='Flag'){
+//								dataFlags.set(key.name,subKey.vals);
+//							}
 						}
-							//dataPacks.set(key.name,bottomObj[key]); //this seems to take 10-100 fold more time!!
+				//dataSets.set(key.name,bottomObj[key]); //this seems to take 10-100 fold more time!!
 					});
 					}
 				 });
-			 console.timeEnd('pollutCursor4each')
+			 console.timeEnd('pollutCursor4each');
 		 });
  
+ var O3data = dataSets.get('O3_conc');
 //for chart options, no tooltip: http://jsfiddle.net/gh/get/jquery/1.7.2/highslide-software/highcharts.com/tree/master/samples/highcharts/plotoptions/series-point-events-mouseover/
         
-		var $report= $('#report');
-		dataChart = $('#container-chart-reactive').highcharts('StockChart', {
+		//var $report= $('#report');
+    var createCharts = function(chartName,subType){
+		dataChart = $('#'+chartName).highcharts('StockChart', {
 		    exporting: {
 		        chartOptions: { // specific options for the exported image
 		            plotOptions: {
@@ -115,8 +118,8 @@ Template.currentsites.onRendered(function (){
 				events: {
 					//click: function(){dataSeriesVar.set(dataSeries('O3'))},
 					selection: function(event) {
-                        console.log(event.xAxis[0].min)
-                        console.log(this.series[1].points.length)
+                        console.log(event.xAxis[0].min);
+                        console.log(this.series[1].points.length);
 						for (var i = 0; i < this.series[0].points.length; i++) {
 							var point = this.series[0].points[i];
 							if (point.x > event.xAxis[0].min &&
@@ -139,11 +142,11 @@ Template.currentsites.onRendered(function (){
 				zoomType: 'xy' 
 		    },
 		    title: {
-		        text: 'Ozone Readings at ' + site.get()
+		        text: subType+ ' Readings at ' + site.get()
 		    },
 		    credits: {
-		        text: "UH-HNET",
-		        href: "http://hnet.uh.edu"
+		        text: 'UH-HNET',
+		        href: 'http://hnet.uh.edu'
 		
 		    },
 		    xAxis: {
@@ -151,35 +154,59 @@ Template.currentsites.onRendered(function (){
 		    },
 		    yAxis: {
 		        title: {
-		            text: 'Ozone Concentration'
+		            text: subType
 		        }
 		    },
 			//name, interval, etc., should come from the subscription
 			series: [{
-				name: '5 minute',
+				name: subType+' 5 minute',
                 type: 'scatter',
 				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
 			    pointInterval: 300000, // need to make dynamic
-				data: dataSets5.get()
+				data: dataSets5.get(subType)
 			 	//data: dataSets.get('data')
 			},
 			{
-	    		name: '30 (or10?) seconds',
+	    		name: subType+' 10 second',
 				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
 	            pointInterval: 10000, // need to make dynamic
-				data: dataSets.get()
+				data: dataSets.get(subType+'_conc')
+			},
+            {
+	    		name: subType+' 10 second',
+				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
+	            pointInterval: 10000, // need to make dynamic
+				data: dataSets.get(subType+'_RH')
+			},
+            {
+	    		name: subType+' 10 second',
+				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
+	            pointInterval: 10000, // need to make dynamic
+				data: dataSets.get(subType+'_Temp')
 			},
 			{
-			    name: 'Flags5',
+			    name: subType+' Flags5',
 				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
 				pointInterval: 300000, //for Flags, now - 300 * 1000, // five minute data
-				data: dataFlags5.get()
+				data: dataFlags5.get(subType)
+			},
+            {
+	    		name: subType+' 10 second',
+				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
+	            pointInterval: 10000, // need to make dynamic
+				data: dataSets.get(subType+'_Direction')
+			},
+            {
+	    		name: subType+' 10 second',
+				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
+	            pointInterval: 10000, // need to make dynamic
+				data: dataSets.get(subType+'_Speed')
 			},
 			{
-			    name: 'Flags',
+			    name: subType+' Flags',
 				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
 				pointInterval: 10000, //for Flags, now - 300 * 1000, // five minute data
-				data: dataFlags.get()
+				data: dataFlags.get(subType+'_Flag')
 					}],
 		    plotOptions: {
 		        series: {
@@ -191,12 +218,12 @@ Template.currentsites.onRendered(function (){
 		                        // when is the chart object updated? after this function finshes?
 		                        var chart = this.series.chart;
 		                        selectedPoints = chart.getSelectedPoints();
-								console.log(selectedPoints)
+								console.log(selectedPoints);
 		                        selectedPoints.push(this);
 		                        $.each(selectedPoints, function(i, value) {
 		                			selectedPointsStr += "<br>"+value.category;
 				                    });
-		                        $report.html(selectedPointsStr);
+		                        //$report.html(selectedPointsStr);
 		                    },
                             mouseOver: function () {
                                 var chart = this.series.chart;
@@ -215,7 +242,7 @@ Template.currentsites.onRendered(function (){
                                 chart.lbl
                                     .show()
                                     .attr({
-                                        text: 'x: ' + moment(this.x).format("MMMM Do YYYY, h:mm:ss a") + ','+this.series.name+' val: ' + this.y
+                                        text: moment.utc(this.x).format('lll') + ', '+this.series.name+' val: ' + this.y
                                     });
                             }
 		                },
@@ -258,6 +285,10 @@ Template.currentsites.onRendered(function (){
 			    selected: 2
 			}
 		}); //end of chart 
+    };
+        createCharts('container-chart-O3','O3');
+        createCharts('container-chart-RMY_Wind','RMY_Wind');
+        createCharts('container-chart-HMP60','HMP60');
 	}); //end autorun
 }); //end of onRendered
 
@@ -265,10 +296,10 @@ Template.currentsites.helpers({
 	//switch map to sites twice to show??
 	selectKeys: function(){
 		//console.log(selectData.get())
-		return selectData.get()
+		return selectData.get();
 	},
 	selectPacks: function(){
-		return dataPacks.get('O3')//thePack//.keys
+		return dataPacks.get('O3');//thePack//.keys
 	}
 	
 });

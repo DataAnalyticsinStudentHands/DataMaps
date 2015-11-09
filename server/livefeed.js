@@ -70,8 +70,6 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                         subObj, {
                             upsert: true
                         });
-                    //console.log(subObj)
-                    //I turned off schema in data.js
                 });
 
             },
