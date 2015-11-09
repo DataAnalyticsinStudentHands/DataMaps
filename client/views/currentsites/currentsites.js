@@ -17,7 +17,7 @@ Template.currentsites.onRendered(function (){
 	    time2find = new ReactiveVar();
 		var subTypName = new ReactiveVar();
 	    site.set('481670570'); 
-	    var nowEpoch = moment("2015-11-08").subtract(1, 'days').unix();//'144644488'; //testing
+	    var nowEpoch = moment("2015-11-03").subtract(3, 'days').unix();//'144644488'; //testing
 	    var nowDown = nowEpoch - (nowEpoch % 10);
 	    var fiveDown = nowDown - (nowDown % 300);
 	    var hourDown = nowDown - (nowDown % 3600);
@@ -25,9 +25,10 @@ Template.currentsites.onRendered(function (){
 	    time2find.set(hourDown);  //for testing 5196299900000 (uh)/5196294320000 /laptop
 	    timeChosen = time2find.get();
 	    timeChosenStr = timeChosen;//.toString();//.replace(/0+$/,'');
-	    subTypName.set('O3'); //have in reactiveVar for selection
+	    subTypName.set('O3') //have in reactiveVar for selection
 	    Meteor.subscribe('aggregatedata5min',site.get(),timeChosenStr,subTypName.get());
 		pollutCursor5 = AggrData.find({});
+        console.log(pollutCursor5);
 	    Meteor.subscribe('livedata',site.get(),timeChosenStr,subTypName.get());
 		//pollutCursor = LiveData.find({},{subTypes:1,_id:0},{limit: 10}); //why not only subTypes???
 		pollutCursor = LiveData.find({});
@@ -39,31 +40,26 @@ Template.currentsites.onRendered(function (){
 		dataPacks = new ReactiveDict();
         dataSeriesVar = new ReactiveVar();
 		dataSeries = function(metron){
-			return dataPacks.get(metron);
+			return dataPacks.get(metron)
 		};
-        var metronTest = 'O3_conc';
+        var metronTest = 'O3_conc'
 		dataSeriesVar.set(metronTest)//;chart.series[0].setData([dataSeriesVar]);
 		// dataIngraph = {};
  		pollutCursor5.forEach(function(line){ //should only be one - not sure why I can't get it more directly
  			console.time('pollutCursor54each')
+            console.log('entered pollut5')
  			_.each(line, function (key) {
  				var bottomObj5 = {};
  				if (key.data){
  					if (!bottomObj5[key]){
  						bottomObj5[key] = {};
- 					}
- 					_.each(key.data, function (subKey,subKeyname) {
- 						if (subKey.vals){
- 							bottomObj5[key][subKeyname] = subKey.vals;
- 							if (key.name=='O3' && subKeyname=='conc'){
- 								dataSets5.set(subKey.vals);
- 							}
- 							if (key.name=='O3' && subKeyname=='Flag'){
- 								dataFlags5.set(subKey.vals);
- 							}
- 						}
- 							//dataPacks.set(key.name,bottomObj[key]); //this seems to take 10-100 fold more time!!
- 					});
+ 					};
+                    if (key.name == 'Flag'){
+                        dataFlags5.set(key.data);
+                    };
+                    if (key.name == "avg"){
+                        dataSets5.set(key.data);
+                    };
  					}
  				 });
  			 console.timeEnd('pollutCursor54each')
@@ -83,10 +79,11 @@ Template.currentsites.onRendered(function (){
 							bottomObj[key][subKeyname] = subKey.vals;
 							// console.log('subKey',subKey)//  subKey is and object
 							// console.log('subKeyname',subKeyname)// i.e., Temp, Flag, Direction
-							if (key.name=='O3' && subKeyname=='conc'){
+							//if (key.name=='O3' && subKeyname=='conc'){
+                            if (subKeyname=='conc'){ //if only subKeyTyp has data?
 								dataSets.set(subKey.vals);
 							}
-							if (key.name=='O3' && subKeyname=='Flag'){
+							if (subKeyname=='Flag'){
 								dataFlags.set(subKey.vals);
 							}
 						}
@@ -97,7 +94,8 @@ Template.currentsites.onRendered(function (){
 			 console.timeEnd('pollutCursor4each')
 		 });
  
-		 //console.log('dfasd',dataPacks.get('O3'))
+//for chart options, no tooltip: http://jsfiddle.net/gh/get/jquery/1.7.2/highslide-software/highcharts.com/tree/master/samples/highcharts/plotoptions/series-point-events-mouseover/
+        
 		var $report= $('#report');
 		dataChart = $('#container-chart-reactive').highcharts('StockChart', {
 		    exporting: {
@@ -117,19 +115,26 @@ Template.currentsites.onRendered(function (){
 				events: {
 					//click: function(){dataSeriesVar.set(dataSeries('O3'))},
 					selection: function(event) {
-						for (var i = 0; i < this.series[1].data.length; i++) {
-							var point = this.series[1].data[i];
+                        console.log(event.xAxis[0].min)
+                        console.log(this.series[1].points.length)
+						for (var i = 0; i < this.series[0].points.length; i++) {
+							var point = this.series[0].points[i];
 							if (point.x > event.xAxis[0].min &&
 								point.x < event.xAxis[0].max &&
 								point.y > event.yAxis[0].min &&
 								point.y < event.yAxis[0].max) {
-									console.log(point)
+									//console.log(point)
 									point.select(true, true);
 								}
 	
 						}
 						return false;
-					}
+					},
+                    mouseOut: function () {
+                        if (this.chart.lbl) {
+                            this.chart.lbl.hide();
+                        }
+                    }
 				},
 				zoomType: 'xy' 
 		    },
@@ -152,15 +157,16 @@ Template.currentsites.onRendered(function (){
 			//name, interval, etc., should come from the subscription
 			series: [{
 				name: '5 minute',
+                type: 'scatter',
 				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
 			    pointInterval: 300000, // need to make dynamic
 				data: dataSets5.get()
 			 	//data: dataSets.get('data')
 			},
 			{
-	    		name: '30 seconds',
+	    		name: '30 (or10?) seconds',
 				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
-	            pointInterval: 30000, // need to make dynamic
+	            pointInterval: 10000, // need to make dynamic
 				data: dataSets.get()
 			},
 			{
@@ -172,7 +178,7 @@ Template.currentsites.onRendered(function (){
 			{
 			    name: 'Flags',
 				pointStart: time2find.get()*1000,//Date.UTC(2004, 3, 1), // first of April
-				pointInterval: 30000, //for Flags, now - 300 * 1000, // five minute data
+				pointInterval: 10000, //for Flags, now - 300 * 1000, // five minute data
 				data: dataFlags.get()
 					}],
 		    plotOptions: {
@@ -191,11 +197,34 @@ Template.currentsites.onRendered(function (){
 		                			selectedPointsStr += "<br>"+value.category;
 				                    });
 		                        $report.html(selectedPointsStr);
-		                    }
-		                }
+		                    },
+                            mouseOver: function () {
+                                var chart = this.series.chart;
+                                if (!chart.lbl) {
+                                    chart.lbl = chart.renderer.label('')
+                                        .attr({
+                                            padding: 10,
+                                            r: 10,
+                                            fill: Highcharts.getOptions().colors[1]
+                                        })
+                                        .css({
+                                            color: '#FFFFFF'
+                                        })
+                                        .add();
+                                }
+                                chart.lbl
+                                    .show()
+                                    .attr({
+                                        text: 'x: ' + moment(this.x).format("MMMM Do YYYY, h:mm:ss a") + ','+this.series.name+' val: ' + this.y
+                                    });
+                            }
+		                },
 		            }
 		        }
 		    },
+                    tooltip: {
+                            enabled: false
+                        },
 			rangeSelector : {
 				//inputEnabled: true, //can't see what it does - thought it was for the dates.
 			    allButtonsEnabled: true,

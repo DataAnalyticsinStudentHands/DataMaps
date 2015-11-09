@@ -33,20 +33,31 @@
 //});
 //Monitors._ensureIndex({ loc : "2dsphere", parameter : 1, state: 1 });
 //I believe site can be an array, but need to sort at end
-var site = ''; //after testing, default to '481670571'
-var timeChosen = ''; //after testing, default to moment().subtract(1, 'days').unix();
-//need to do things like time with and without sorting after have full size data
+var site = '' //after testing, default to '481670571'
+var timeChosen = '' //after testing, default to moment().subtract(1, 'days').unix();
+    //need to do things like time with and without sorting after have full size data
 var searchBuild = function () {
-    return '$and: [{ site: ' + site + '}, {epoch: {$gt: parseInt(' + timeChosen + ',10)}},{sort:{epoch:1}}]';
-};
+    return '$and: [{ site: ' + site + '}, {epoch: {$gt: parseInt(' + timeChosen + ',10)}},{sort:{epoch:1}}]'
+}
 
 Meteor.publish('livedata', function (site, timeChosen, subTypName) {
+    //testing
+    //could also pass endTime as part of $lt - 3600000 = 1 day
     self = this;
     pollData = {};
-    //can't seem to get aggPipe shared between the two publish calls
-    var aggPipe = [{
+    //need to call aggPipe as a function to make it shared across publishers
+    var aggPipe = [
+        {
             $match: {
-                site: '482010570'
+                $and: [{
+                        site: '481670570'
+                    },
+                    {
+                        epoch: {
+                            $gt: parseInt(timeChosen, 10),
+                            $lt: parseInt(timeChosen + 3600000, 10)
+                        }
+                    }]
             }
         },
         {
@@ -60,27 +71,26 @@ Meteor.publish('livedata', function (site, timeChosen, subTypName) {
                 _id: 0
             }
         }
-	];
+ ];
     pollutData = LiveData.aggregate(aggPipe, function (err, line) {
             _.each(line, function (key) {
                 //if(line.hasOwnProperty(key)){
                 _.each(key.subTypes, function (subKey, subType) { //subType is O3, etc.
-                    //if(key.subTypes.hasOwnProperty(subType)){
+
                     if (!pollData[subType]) {
                         pollData[subType] = {};
-                    }
+                    };
                     _.each(subKey, function (sub) { //sub is the array with metric/val pairs as subarrays
-                        //if(subKey.hasOwnProperty(sub)){
-                        if (!pollData[subType][sub.metric]) {
-                            pollData[subType][sub.metric] = {};
-                            pollData[subType][sub.metric]['name'] = sub.metric;
-                            pollData[subType][sub.metric]['vals'] = [];
-                        }
-                        pollData[subType][sub.metric]['vals'].push(sub.val);
-                        //};
+                        if (subType == subTypName) { //reduces amount going to browser
+                            if (!pollData[subType][sub.metric]) {
+                                pollData[subType][sub.metric] = {};
+                                pollData[subType][sub.metric]['name'] = sub.metric;
+                                pollData[subType][sub.metric]['vals'] = [];
+                            };
+                            pollData[subType][sub.metric]['vals'].push(sub.val)
+                        };
                     });
-                    //};
-                });
+                })
                 //}; //end ownProp on key
             });
             //console.timeEnd('pollData')
@@ -92,9 +102,9 @@ Meteor.publish('livedata', function (site, timeChosen, subTypName) {
                             name: pubKey,
                             data: pollData[pubKey]
                         }
-                    });
+                    })
                 }
-            }
+            };
         },
         function (error) {
             Meteor._debug('error during livedata publication aggregation: ' + error);
@@ -105,7 +115,7 @@ Meteor.publish('livedata', function (site, timeChosen, subTypName) {
 Meteor.publish('aggregatedata5min', function (site, timeChosen, subTypName) {
     self = this;
     poll5Data = {};
-    console.time('pub5min');
+    console.time('pub5min')
     var aggPipe = [{
             $match: {
                 site: site
@@ -118,44 +128,38 @@ Meteor.publish('aggregatedata5min', function (site, timeChosen, subTypName) {
         },
         {
             $project: {
-                subTypes: 1,
+                O3: 1,
                 _id: 0
             }
         }
-	];
+ ];
     pollut5Data = AggrData.aggregate(aggPipe, function (err, line) {
+
             _.each(line, function (key) {
-                _.each(key.subTypes, function (subKey, subType) { //subType is O3, etc.
+                _.each(key.O3, function (subKey, subType) { //subType is O3, etc.
                     if (!poll5Data[subType]) {
-                        poll5Data[subType] = {};
-                    }
-                    _.each(subKey, function (sub) { //sub is the array with metric/val pairs as subarrays
-                        if (!poll5Data[subType][sub.metric]) {
-                            poll5Data[subType][sub.metric] = {};
-                            poll5Data[subType][sub.metric]['name'] = sub.metric;
-                            poll5Data[subType][sub.metric]['vals'] = [];
-                        }
-                        poll5Data[subType][sub.metric]['vals'].push(sub.val);
-                    });
+                        poll5Data[subType] = [];
+                    };
+                    poll5Data[subType].push(subKey);
                 });
             });
-            for (var pubKey in pollData) {
+            for (var pubKey in poll5Data) {
                 if (poll5Data.hasOwnProperty(pubKey)) {
-                    console.log(pubKey);
+                    //console.log(pubKey)
                     self.added('aggregatedata5min', Random.id(), {
                         pollut5Key: {
                             name: pubKey,
                             data: poll5Data[pubKey]
                         }
-                    });
+                    })
                 }
-            }
+            };
         },
         function (error) {
             Meteor._debug('error during livedata publication aggregation: ' + error);
         }
     );
-    console.timeEnd('pub5min');
+    console.timeEnd('pub5min')
 });
 Meteor.publish('tceqData', function () {
     var now = new Date();
@@ -186,7 +190,7 @@ Meteor.publish('siteData', function (latLng) {
     });
 });
 Meteor.publish('monitors', function (latLng) {
-    console.log(latLng);
+    console.log(latLng)
     //   return Monitors.find({AQSID:'481670571'})
     return Monitors.find();
     return Monitors.find({

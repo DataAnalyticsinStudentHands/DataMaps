@@ -8,8 +8,6 @@ winston.add(winston.transports.DailyRotateFile, {
 
 winston.info('Winston logs are being captured console and file (/var/log/meteor/datamaps.log)');
 
-IncomingLiveDataDir = '/hnet/incoming/2015';
-
 AdminConfig = {
   collections: {
     //mapsdata: {}

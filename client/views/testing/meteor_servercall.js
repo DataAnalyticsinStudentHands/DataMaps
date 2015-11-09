@@ -16,13 +16,22 @@ Template.passData.result = function () {
 };
 
 Template.passData.events = {
-    'click input[type=button]': function () {
-        Meteor.call('new5minAggreg', 481670571, $('input[type=text]').val(), function (err, response) {
+    'click #passDataResult': function () {
+        Meteor.call('new5minAggreg', $('input[type=text]').val(), moment().unix(), function (err, response) {
             if (err) {
                 Session.set('serverDataResponse', 'Error:' + err.reason);
                 return;
             }
             Session.set('serverDataResponse', response);
         });
-    }
+    },
+    'click #exportDataResult': function () {
+        Meteor.call('exportData', $('#site').val(), $('#start').val(), $('#end').val(), function (err, response) {
+            if (err) {
+                Session.set('serverExportDataResponse', 'Error:' + err.reason);
+                return;
+            }
+            Session.set('serverExportDataResponse', response);
+        });
+    }  
 };

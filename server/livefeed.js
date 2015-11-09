@@ -9,7 +9,7 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
     var pipeline = [
         {
             $match: {
-                site: siteId
+                site: '482010570'
             }
         },
         {
@@ -215,5 +215,5 @@ liveWatcher
         //initialRead('/hnet/incoming/2015/UHCCH_DAQData/HNET_CCH_TCEQ_151103.txt');
         //initialRead('/hnet/incoming/2015/UHCBH_DAQData/HNET_CBH_TCEQ_151103.txt');
         //initialRead('/hnet/incoming/2015/UHCLH_DAQData/HNET_CLH_TCEQ_151103.txt');
-        logger.info('Ready for changes in /hnet/incoming/2015/UHCCH_DAQData/.');
+        logger.info('Ready for changes in /hnet/incoming/2015/.');
     });
