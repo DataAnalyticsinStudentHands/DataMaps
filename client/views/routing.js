@@ -6,18 +6,29 @@ Router.configure({
 		nav: {to: 'nav'}
 	    }
 });
+//Router.route('/:pos?',{ //should be an object with lat/lng
 Router.route('/',{
-	name: 'map',
-	template:'map',
+	name: 'mainMap',
+	template:'mainMap',
+    data: function () {
+		mapCollectionDistance = new ReactiveVar();
+		mapCollectionDistance.set(1200);
+        mapCollectionNumberVis = new ReactiveVar();
+		mapCollectionNumberVis.set(10);
+        Meteor.subscribe("monitors",'herenow');
+    },
 	action: function () {
 		this.render();
 	}
 });
-Router.route('/currentsites', {
+Router.route('/currentsites/:siteId?', {
+//Router.route('/currentsites/', {
 	name:'currentsites',
 	template:'currentsites',
-	data: function(){
-	},
+    data: function(){ 
+
+
+    },
 	action: function () {
 		if (this.ready()) {
  	      this.render();
@@ -32,17 +43,16 @@ Router.route('/history/',{
  	    this.render();
  	}
 });
-Router.route('/testing/',{
-     name: 'testing',
-     template: 'passData',
+Router.route('/admin/',{
+     name: 'admin',
+     template: 'admin',
  	 action: function () {
  	    this.render();
  	}
 });
-
-Router.route('/admin/',{
-     name: 'admin',
-     template: 'admin',
+Router.route('/testing/',{
+     name: 'testing',
+     template: 'passData',
  	 action: function () {
  	    this.render();
  	}

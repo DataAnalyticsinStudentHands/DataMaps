@@ -38,8 +38,9 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
             function (err, result) {
                 _.each(result, function (e) {
                     var subObj = {};
-                    subObj._id = e._id;
+                    subObj._id = e.site + '_' + e._id;
                     subObj.site = e.site;
+                    subObj.epoch = e.epoch5min;
                     var metrons = e.subTypes;
                     for (var i = 0; i < metrons.length; i++) {
                         for (var newkey in metrons[i]) {

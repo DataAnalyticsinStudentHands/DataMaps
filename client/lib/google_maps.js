@@ -1,4 +1,4 @@
-gmaps = {
+/*gmaps = {
     // map object
     map: null, 
     // google markers objects
@@ -122,3 +122,4 @@ gmaps = {
     return gMarker;
     }
 }
+*/
