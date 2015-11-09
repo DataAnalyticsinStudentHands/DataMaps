@@ -17,9 +17,11 @@ Template.currentsites.onRendered(function (){
 	    time2find = new ReactiveVar();
 		var subTypName = new ReactiveVar();
 	    site.set('482010572'); 
-	    var nowEpoch = moment('2015-11-08').subtract(0, 'days').unix();//'144644488'; //testing
+	    var nowEpoch = moment().subtract(1, 'days').unix();//'144644488'; //testing
 	    //var dayDown = (nowDown - 86400) - ((nowDown - 86400) % 3600);
-	    time2find.set(nowEpoch);  //for testing 5196299900000 (uh)/5196294320000 /laptop
+        
+	    time2find.set(nowEpoch);  
+       
 	    timeChosen = time2find.get();
 	    timeChosenStr = timeChosen;//.toString();//.replace(/0+$/,'');
 	    subTypName.set('O3'); //have in reactiveVar for selection

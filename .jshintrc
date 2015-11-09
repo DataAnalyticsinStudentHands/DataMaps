@@ -104,6 +104,7 @@
         "LiveData": false,
         "TCEQData": false,
         "AggrData": false,
-        "self": false
+        "self": false,
+        "Kadira": false
     }
 }
