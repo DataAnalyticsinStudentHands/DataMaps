@@ -41,27 +41,36 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                     subObj._id = e.site + '_' + e._id;
                     subObj.site = e.site;
                     subObj.epoch = e._id;
-                    var metrons = e.subTypes;
-                    for (var i = 0; i < metrons.length; i++) {
-                        for (var newkey in metrons[i]) {
-                            if (metrons[i][newkey][1].metric === 'Flag' && metrons[i][newkey][1].val === 1) {
-                                if (!subObj[newkey]) {
-                                    subObj[newkey] = {
-                                        'sum': metrons[i][newkey][0].val,
-                                        'avg': metrons[i][newkey][0].val,
-                                        'numValid': parseInt(1, 10),
-                                        'Flag': 1
-                                    };
-                                } else {
-                                    subObj[newkey].numValid += 1;
-                                    subObj[newkey].sum += metrons[i][newkey][0].val; //holds sum until end
-                                    subObj[newkey].avg = subObj[newkey].sum / subObj[newkey].numValid;
-                                    
-                                }
-                                if ((subObj[newkey].numValid / i) < 0.75) {
-                                    subObj[newkey].Flag = 0; //should discuss how to use
+                    var subTypes = e.subTypes;
+                    subObj.explain = subTypes;
+                    for (var i = 0; i < subTypes.length; i++) {
+                        for (var subType in subTypes[i]) {
+                            if (subTypes[i].hasOwnProperty(subType)) {
+                                var data = subTypes[i][subType];
+                                if (data[0].val === 1) { //Flag should be valid
+                                    for (var i = 1; i < data.lenght; i++) {
+                                        var newkey = subType + '_' + data.metric;
+                                        if (!subObj[newkey]) {
+                                            subObj[newkey] = {
+                                                'sum': subTypes[i][newkey][0].val,
+                                                'avg': subTypes[i][newkey][0].val,
+                                                'numValid': parseInt(1, 10),
+                                                'Flag': 1
+                                            };
+                                        } else {
+                                            subObj[newkey].numValid += 1;
+                                            subObj[newkey].sum += subTypes[i][newkey][0].val; //holds sum until end
+                                            subObj[newkey].avg = subObj[newkey].sum / subObj[newkey].numValid;
+
+                                        }
+                                        if ((subObj[newkey].numValid / i) < 0.75) {
+                                            subObj[newkey].Flag = 0; //should discuss how to use
+                                        }
+                                    }
+
                                 }
                             }
+
                         }
                     }
                     AggrData.update({
@@ -123,10 +132,17 @@ var makeObj = function (keys) {
                         val: val
                 }];
                 } else {
-                    obj.subTypes[metron].push({
-                        metric: metric,
-                        val: val
-                    });
+                    if (metric === 'Flag') { //Flag should be always first
+                        obj.subTypes[metron].unshift({
+                            metric: metric,
+                            val: val
+                        });
+                    } else {
+                        obj.subTypes[metron].push({
+                            metric: metric,
+                            val: val
+                        });
+                    }
                 }
             }
         }

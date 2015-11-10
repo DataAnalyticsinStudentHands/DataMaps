@@ -8,9 +8,9 @@ mdg:geolocation
 iron:router
 accounts-password
 email
-meteorhacks:npm
-npm-container
-momentjs:moment
+meteorhacks:npm                 # Handling of npm packages
+npm-container                   # Handling of npm packages
+momentjs:moment                 # Time calculations
 udondan:bulk-collection-update
 useraccounts:iron-routing
 useraccounts:semantic-ui
@@ -18,10 +18,10 @@ aldeed:collection2
 alanning:roles
 dburles:collection-helpers
 fortawesome:fontawesome
-standard-minifiers
-meteor-base
+standard-minifiers              # JS/CSS minifiers run for production mode
+meteor-base                     # Packages every Meteor app needs to have
 mobile-experience
-mongo
+mongo                           # The database Meteor supports right now
 blaze-html-templates
 session
 jquery
@@ -32,11 +32,11 @@ random
 ejson
 spacebars
 check
-meteorhacks:aggregate
+meteorhacks:aggregate           # MongoDB Aggregation
 reactive-var
 reactive-dict
 bevanhunt:leaflet
 zimme:active-route
 semantic:ui-css
 jhuenges:highstock
-meteorhacks:kadira
+meteorhacks:kadira              # Remote performance watch
