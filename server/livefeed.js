@@ -87,29 +87,6 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
     );
 };
 
-//insert live data into DB; _id is site_epoch
-//obj has subTypes, epoch5min
-var liveDataUpsert = Meteor.bindEnvironment(function (path, obj) {
-
-
-    
-    
-    LiveData.update(obj, {multi:true});
-    //        LiveData.upsert({
-    //            _id: site.AQSID + '_' + obj.epoch
-    //        }, {
-    //            epoch: obj.epoch,
-    //            epoch5min: obj.epoch5min,
-    //            file: pathArray[pathArray.length - 1],
-    //            site: site.AQSID,
-    //            subTypes: obj.subTypes,
-    //            theTime: obj.theTime
-    //        });
-
-});
-
-
-
 var makeObj = function (keys) {
     var obj = {};
     obj.subTypes = {};
@@ -148,7 +125,7 @@ var makeObj = function (keys) {
     return obj;
 };
 
-var hallo = Meteor.bindEnvironment(function (parsedLines, path) {
+var batchLiveDataUpsert = Meteor.bindEnvironment(function (parsedLines, path) {
                 //find the site information
                 var pathArray = path.split('/');
                 var parentDir = pathArray[pathArray.length - 2];
@@ -166,10 +143,20 @@ var hallo = Meteor.bindEnvironment(function (parsedLines, path) {
                         singleObj.epoch5min = epoch - (epoch % 300);
                         singleObj.theTime = parsedLines[k].TheTime;
                         singleObj.site = site.AQSID;
-                        singleObj._id = site.AQSID + '_' + epoch
+                        singleObj._id = site.AQSID + '_' + epoch;
                         allObjects.push(singleObj);
                     }
-                    liveDataUpsert(path, allObjects);
+                    LiveData.batchInsert(allObjects);
+    //        LiveData.upsert({
+    //            _id: site.AQSID + '_' + obj.epoch
+    //        }, {
+    //            epoch: obj.epoch,
+    //            epoch5min: obj.epoch5min,
+    //            file: pathArray[pathArray.length - 1],
+    //            site: site.AQSID,
+    //            subTypes: obj.subTypes,
+    //            theTime: obj.theTime
+    //        });
                 }
 
             });
@@ -188,7 +175,7 @@ var readFile = function (path) {
                 logger.error(err);
             }
 
-            hallo(parsedLines, path);
+            batchLiveDataUpsert(parsedLines, path);
 
         });
     });
