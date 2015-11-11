@@ -42,24 +42,24 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                     subObj.site = e.site;
                     subObj.epoch = e._id;
                     var subTypes = e.subTypes;
-                    subObj.explain = subTypes;
                     for (var i = 0; i < subTypes.length; i++) {
                         for (var subType in subTypes[i]) {
                             if (subTypes[i].hasOwnProperty(subType)) {
                                 var data = subTypes[i][subType];
                                 if (data[0].val === 1) { //Flag should be valid
-                                    for (var i = 1; i < data.lenght; i++) {
-                                        var newkey = subType + '_' + data.metric;
+                                    for (var j = 1; j < data.length; j++) {
+                                        var newkey = subType + '_' + data[j].metric;
+                                        subObj.test = newkey;
                                         if (!subObj[newkey]) {
                                             subObj[newkey] = {
-                                                'sum': subTypes[i][newkey][0].val,
-                                                'avg': subTypes[i][newkey][0].val,
+                                                'sum': data[j].val,
+                                                'avg': data[j].val,
                                                 'numValid': parseInt(1, 10),
                                                 'Flag': 1
                                             };
                                         } else {
                                             subObj[newkey].numValid += 1;
-                                            subObj[newkey].sum += subTypes[i][newkey][0].val; //holds sum until end
+                                            subObj[newkey].sum += data[j].val; //holds sum until end
                                             subObj[newkey].avg = subObj[newkey].sum / subObj[newkey].numValid;
 
                                         }
@@ -67,10 +67,8 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                                             subObj[newkey].Flag = 0; //should discuss how to use
                                         }
                                     }
-
                                 }
                             }
-
                         }
                     }
                     AggrData.update({
@@ -92,26 +90,25 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
 //insert live data into DB; _id is site_epoch
 //obj has subTypes, epoch5min
 var liveDataUpsert = Meteor.bindEnvironment(function (path, obj) {
-    var pathArray = path.split('/');
-    var parentDir = pathArray[pathArray.length - 2];
 
-    var site = Monitors.find({
-        incoming: parentDir
-    }).fetch()[0];
 
-    if (obj.epoch > 0 && site.AQSID) {
-        LiveData.upsert({
-            _id: site.AQSID + '_' + obj.epoch
-        }, {
-            epoch: obj.epoch,
-            epoch5min: obj.epoch5min,
-            file: pathArray[pathArray.length - 1],
-            site: site.AQSID,
-            subTypes: obj.subTypes,
-            theTime: obj.theTime
-        });
-    }
+    
+    
+    LiveData.update(obj, {multi:true});
+    //        LiveData.upsert({
+    //            _id: site.AQSID + '_' + obj.epoch
+    //        }, {
+    //            epoch: obj.epoch,
+    //            epoch5min: obj.epoch5min,
+    //            file: pathArray[pathArray.length - 1],
+    //            site: site.AQSID,
+    //            subTypes: obj.subTypes,
+    //            theTime: obj.theTime
+    //        });
+
 });
+
+
 
 var makeObj = function (keys) {
     var obj = {};
@@ -151,16 +148,32 @@ var makeObj = function (keys) {
     return obj;
 };
 
-var write10Sec = function (path, arr) {
-    for (var k = 0; k < arr.length; k++) {
-        var singleObj = makeObj(arr[k]);
-        var epoch = ((arr[k].TheTime - 25569) * 86400) + 6 * 3600;
-        singleObj.epoch = epoch - (epoch % 1); //rounding down
-        singleObj.epoch5min = epoch - (epoch % 300);
-        singleObj.theTime = arr[k].TheTime;
-        liveDataUpsert(path, singleObj);
-    }
-};
+var hallo = Meteor.bindEnvironment(function (parsedLines, path) {
+                //find the site information
+                var pathArray = path.split('/');
+                var parentDir = pathArray[pathArray.length - 2];
+                var site = Monitors.find({
+                    incoming: parentDir
+                }).fetch()[0];
+
+                if (site.AQSID) {
+                    var allObjects = [];
+                    for (var k = 0; k < parsedLines.length; k++) {
+                        var singleObj = makeObj(parsedLines[k]);
+                        var epoch = ((parsedLines[k].TheTime - 25569) * 86400) + 6 * 3600;
+                        epoch = epoch - (epoch % 1); //rounding down
+                        singleObj.epoch = epoch;
+                        singleObj.epoch5min = epoch - (epoch % 300);
+                        singleObj.theTime = parsedLines[k].TheTime;
+                        singleObj.site = site.AQSID;
+                        singleObj._id = site.AQSID + '_' + epoch
+                        allObjects.push(singleObj);
+                    }
+                    liveDataUpsert(path, allObjects);
+                }
+
+            });
+
 
 var readFile = function (path) {
 
@@ -170,11 +183,13 @@ var readFile = function (path) {
             rowDelimiter: '\r',
             auto_parse: true,
             columns: true
-        }, function (err, parsedLine) {
+        }, function (err, parsedLines) {
             if (err) {
                 logger.error(err);
             }
-            write10Sec(path, parsedLine);
+
+            hallo(parsedLines, path);
+
         });
     });
 };
