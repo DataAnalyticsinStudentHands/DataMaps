@@ -42,35 +42,46 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                     subObj.site = e.site;
                     subObj.epoch = e._id;
                     var subTypes = e.subTypes;
+                    subObj.test = subTypes;
+                    var aggrSubTypes = {}; //hold subTypes
                     for (var i = 0; i < subTypes.length; i++) {
                         for (var subType in subTypes[i]) {
                             if (subTypes[i].hasOwnProperty(subType)) {
+                                aggrSubTypes[subType] = {};
                                 var data = subTypes[i][subType];
                                 if (data[0].val === 1) { //Flag should be valid
                                     for (var j = 1; j < data.length; j++) {
-                                        var newkey = subType + '_' + data[j].metric;
-                                        subObj.test = newkey;
-                                        if (!subObj[newkey]) {
-                                            subObj[newkey] = {
-                                                'sum': data[j].val,
-                                                'avg': data[j].val,
-                                                'numValid': parseInt(1, 10),
-                                                'Flag': 1
-                                            };
-                                        } else {
-                                            subObj[newkey].numValid += 1;
-                                            subObj[newkey].sum += data[j].val; //holds sum until end
-                                            subObj[newkey].avg = subObj[newkey].sum / subObj[newkey].numValid;
-
+                                        var newkey = data[j].metric;
+                                        //aggrSubTypes[subType][newkey] = [];
+                                        if (j === 1) {
+                                              aggrSubTypes[subType][newkey]= [{
+                                                metric: 'sum',
+                                                val: data[j].val
+                                            }, {
+                                                metric: 'avg',
+                                                val: data[j].val
+                                            }, {
+                                                metric: 'numValid',
+                                                val: parseInt(1, 10)
+                                            }, {
+                                                metric: 'Flag',
+                                                val: 1
+                                            }];
+                                        } 
+                                        else {
+                                            aggrSubTypes[subType][newkey][0].val += data[j].val; //sum
+                                            aggrSubTypes[subType][newkey][1].val = aggrSubTypes[subType][newkey][0] / aggrSubTypes[subType][newkey][2]; //avg
+                                            aggrSubTypes[subType][newkey][2].val += 1; //numValid
                                         }
-                                        if ((subObj[newkey].numValid / i) < 0.75) {
-                                            subObj[newkey].Flag = 0; //should discuss how to use
-                                        }
+//                                        if ((aggrSubTypes[subType][newkey][2] / i) < 0.75) {
+//                                            aggrSubTypes[subType][newkey][3].val = 0; //should discuss how to use
+//                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    subObj.subTypes = aggrSubTypes;
                     AggrData.update({
                             _id: subObj._id
                         },
@@ -126,44 +137,44 @@ var makeObj = function (keys) {
 };
 
 var batchLiveDataUpsert = Meteor.bindEnvironment(function (parsedLines, path) {
-                //find the site information
-                var pathArray = path.split('/');
-                var parentDir = pathArray[pathArray.length - 2];
-                var site = Monitors.find({
-                    incoming: parentDir
-                }).fetch()[0];
+    //find the site information
+    var pathArray = path.split('/');
+    var parentDir = pathArray[pathArray.length - 2];
+    var site = Monitors.find({
+        incoming: parentDir
+    }).fetch()[0];
 
-                if (site.AQSID) {
-                    var allObjects = [];
-                    for (var k = 0; k < parsedLines.length; k++) {
-                        var singleObj = makeObj(parsedLines[k]);
-                        var epoch = ((parsedLines[k].TheTime - 25569) * 86400) + 6 * 3600;
-                        epoch = epoch - (epoch % 1); //rounding down
-                        singleObj.epoch = epoch;
-                        singleObj.epoch5min = epoch - (epoch % 300);
-                        singleObj.theTime = parsedLines[k].TheTime;
-                        singleObj.site = site.AQSID;
-                        singleObj._id = site.AQSID + '_' + epoch;
-                        allObjects.push(singleObj);
-                    }
-                    //LiveData.batchInsert(allObjects);
-                    
-                    var theRaw = LiveData.rawCollection();
-                    var mongoInsertSync = Meteor.wrapAsync(theRaw.insert, theRaw);
-                    var result = mongoInsertSync(allObjects);
-    //        LiveData.upsert({
-    //            _id: site.AQSID + '_' + obj.epoch
-    //        }, {
-    //            epoch: obj.epoch,
-    //            epoch5min: obj.epoch5min,
-    //            file: pathArray[pathArray.length - 1],
-    //            site: site.AQSID,
-    //            subTypes: obj.subTypes,
-    //            theTime: obj.theTime
-    //        });
-                }
+    if (site.AQSID) {
+        var allObjects = [];
+        for (var k = 0; k < parsedLines.length; k++) {
+            var singleObj = makeObj(parsedLines[k]);
+            var epoch = ((parsedLines[k].TheTime - 25569) * 86400) + 6 * 3600;
+            epoch = epoch - (epoch % 1); //rounding down
+            singleObj.epoch = epoch;
+            singleObj.epoch5min = epoch - (epoch % 300);
+            singleObj.theTime = parsedLines[k].TheTime;
+            singleObj.site = site.AQSID;
+            singleObj._id = site.AQSID + '_' + epoch;
+            allObjects.push(singleObj);
+        }
+        //LiveData.batchInsert(allObjects);
 
-            });
+        var theRaw = LiveData.rawCollection();
+        var mongoInsertSync = Meteor.wrapAsync(theRaw.insert, theRaw);
+        var result = mongoInsertSync(allObjects);
+        //        LiveData.upsert({
+        //            _id: site.AQSID + '_' + obj.epoch
+        //        }, {
+        //            epoch: obj.epoch,
+        //            epoch5min: obj.epoch5min,
+        //            file: pathArray[pathArray.length - 1],
+        //            site: site.AQSID,
+        //            subTypes: obj.subTypes,
+        //            theTime: obj.theTime
+        //        });
+    }
+
+});
 
 
 var readFile = function (path) {
