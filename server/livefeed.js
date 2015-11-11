@@ -146,7 +146,11 @@ var batchLiveDataUpsert = Meteor.bindEnvironment(function (parsedLines, path) {
                         singleObj._id = site.AQSID + '_' + epoch;
                         allObjects.push(singleObj);
                     }
-                    LiveData.batchInsert(allObjects);
+                    //LiveData.batchInsert(allObjects);
+                    
+                    var theRaw = LiveData.rawCollection();
+                    var mongoInsertSync = Meteor.wrapAsync(theRaw.insert, theRaw);
+                    var result = mongoInsertSync(allObjects);
     //        LiveData.upsert({
     //            _id: site.AQSID + '_' + obj.epoch
     //        }, {
