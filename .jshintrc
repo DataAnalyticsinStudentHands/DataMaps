@@ -19,9 +19,9 @@
     "strict": false, // Deactivated to allow easier use of globals in meteor
     "trailing": true, // Prohibit trailing whitespaces.
     "maxparams": 4, // This option lets you set the max number of formal parameters allowed per function.
-    "maxdepth": 4, // This option lets you control how nested do you want your blocks to be.
-    "maxstatements": 20, // This option lets you set the max number of statements allowed per function.
-    "maxcomplexity": 6, // This option lets you control cyclomatic complexity throughout your code.
+    "maxdepth": 6, // This option lets you control how nested do you want your blocks to be.
+    "maxstatements": 40, // This option lets you set the max number of statements allowed per function.
+    "maxcomplexity": 8, // This option lets you control cyclomatic complexity throughout your code.
 
     // == Relaxing Options ================================================
     "asi": false, // Tolerate Automatic Semicolon Insertion (no semicolons).
@@ -104,7 +104,7 @@
         "LiveData": false,
         "TCEQData": false,
         "AggrData": false,
-        "self": false,
-        "Kadira": false
+        "Kadira": false,
+        "bulkCollectionUpdate": false
     }
 }

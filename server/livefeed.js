@@ -9,7 +9,14 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
     var pipeline = [
         {
             $match: {
-                site: siteId
+                $and: [{
+                    epoch: {
+                        $gt: parseInt(startTime, 10),
+                        $lt: parseInt(endTime, 10)
+                    }
+                }, {
+                    site: siteId
+                }]
             }
         },
         {
@@ -170,41 +177,26 @@ var batchLiveDataUpsert = Meteor.bindEnvironment(function (parsedLines, path) {
     if (site.AQSID) {
         var allObjects = [];
         for (var k = 0; k < parsedLines.length; k++) {
-            var singleObj = makeObj(parsedLines[k]);
+            var singleObj = makeObj(parsedLines[k]); //add data in
             var epoch = ((parsedLines[k].TheTime - 25569) * 86400) + 6 * 3600;
             epoch = epoch - (epoch % 1); //rounding down
             singleObj.epoch = epoch;
             singleObj.epoch5min = epoch - (epoch % 300);
             singleObj.theTime = parsedLines[k].TheTime;
             singleObj.site = site.AQSID;
+            singleObj.file = pathArray[pathArray.length - 1];
             singleObj._id = site.AQSID + '_' + epoch;
+
             allObjects.push(singleObj);
         }
-        
+
         //using bulCollectionUpdate
         bulkCollectionUpdate(LiveData, allObjects, {
             callback: function () {
                 logger.info('LiveData updated.');
             }
         });
-
-        //LiveData.batchInsert(allObjects);
-
-        //var theRaw = LiveData.rawCollection();
-        //var mongoInsertSync = Meteor.wrapAsync(theRaw.insert, theRaw);
-        //var result = mongoInsertSync(allObjects);
-        //        LiveData.upsert({
-        //            _id: site.AQSID + '_' + obj.epoch
-        //        }, {
-        //            epoch: obj.epoch,
-        //            epoch5min: obj.epoch5min,
-        //            file: pathArray[pathArray.length - 1],
-        //            site: site.AQSID,
-        //            subTypes: obj.subTypes,
-        //            theTime: obj.theTime
-        //        });
     }
-
 });
 
 
@@ -212,8 +204,6 @@ var readFile = function (path) {
 
     fs.readFile(path, 'utf-8', function (err, output) {
         csvmodule.parse(output, {
-            delimiter: ',',
-            rowDelimiter: '\r',
             auto_parse: true,
             columns: true
         }, function (err, parsedLines) {
@@ -222,34 +212,27 @@ var readFile = function (path) {
             }
 
             batchLiveDataUpsert(parsedLines, path);
+            var nowEpoch = moment().unix();
+            var agoEpoch = moment.unix(nowEpoch).subtract(10, 'minutes').unix();
 
+            //find the site information
+            var pathArray = path.split('/');
+            var parentDir = pathArray[pathArray.length - 2];
+            var site = Monitors.find({
+                incoming: parentDir
+            }).fetch()[0];
+            
+            perform5minAggregat(site, agoEpoch, nowEpoch);
         });
     });
 };
 
 Meteor.methods({
-    new5minAggreg: function (siteId, timeChosen) {
-        logger.info('Helper called 5minAgg for site: ', siteId);
-        perform5minAggregat(siteId, timeChosen);
+    new5minAggreg: function (siteId, startTime, endTime) {
+        logger.info('Helper called 5minAgg for site: ', siteId, ' start: ', startTime, ' end: ', endTime);
+        perform5minAggregat(siteId, startTime, endTime);
     }
 });
-
-//Meteor.setInterval(function () {
-//    
-//    var nowEpoch = moment().unix();
-//    
-//    //hardcoded, should be replaced with something more flexible
-//    perform5minAggregat('481670571', nowEpoch);
-//    perform5minAggregat('482010572', nowEpoch);
-//    perform5minAggregat('482010570', nowEpoch);
-//}, 300000); //every five minutes
-
-//can be used when server starts up to read existing files in the directory,
-//this can be slow if there are a lot of files to process
-var initialRead = function (path) {
-    logger.info('initialRead found file: ', path);
-    readFile(path);
-};
 
 var liveWatcher = chokidar.watch('/hnet/incoming/2015', {
     ignored: /[\/\\]\./,
@@ -274,8 +257,5 @@ liveWatcher
         logger.error('Error happened', error);
     })
     .on('ready', function () {
-        //initialRead('/hnet/incoming/2015/UHCCH_DAQData/HNET_CCH_TCEQ_151103.txt');
-        //initialRead('/hnet/incoming/2015/UHCBH_DAQData/HNET_CBH_TCEQ_151103.txt');
-        //initialRead('/hnet/incoming/2015/UHCLH_DAQData/HNET_CLH_TCEQ_151103.txt');
         logger.info('Ready for changes in /hnet/incoming/2015/.');
     });
