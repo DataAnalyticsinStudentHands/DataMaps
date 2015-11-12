@@ -52,9 +52,10 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                                 if (data[0].val === 1) { //Flag should be valid
                                     for (var j = 1; j < data.length; j++) {
                                         var newkey = data[j].metric;
-                                        //aggrSubTypes[subType][newkey] = [];
+
                                         if (j === 1) {
-                                              aggrSubTypes[subType][newkey]= [{
+                                            aggrSubTypes[subType][newkey] = [];
+                                            aggrSubTypes[subType][newkey] = [{
                                                 metric: 'sum',
                                                 val: data[j].val
                                             }, {
@@ -67,15 +68,14 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                                                 metric: 'Flag',
                                                 val: 1
                                             }];
-                                        } 
-                                        else {
+                                        } else {
                                             aggrSubTypes[subType][newkey][0].val += data[j].val; //sum
                                             aggrSubTypes[subType][newkey][1].val = aggrSubTypes[subType][newkey][0] / aggrSubTypes[subType][newkey][2]; //avg
                                             aggrSubTypes[subType][newkey][2].val += 1; //numValid
                                         }
-//                                        if ((aggrSubTypes[subType][newkey][2] / i) < 0.75) {
-//                                            aggrSubTypes[subType][newkey][3].val = 0; //should discuss how to use
-//                                        }
+                                        //                                        if ((aggrSubTypes[subType][newkey][2] / i) < 0.75) {
+                                        //                                            aggrSubTypes[subType][newkey][3].val = 0; //should discuss how to use
+                                        //                                        }
                                     }
                                 }
                             }
@@ -159,9 +159,16 @@ var batchLiveDataUpsert = Meteor.bindEnvironment(function (parsedLines, path) {
         }
         //LiveData.batchInsert(allObjects);
 
-        var theRaw = LiveData.rawCollection();
-        var mongoInsertSync = Meteor.wrapAsync(theRaw.insert, theRaw);
-        var result = mongoInsertSync(allObjects);
+        //var theRaw = LiveData.rawCollection();
+        //var mongoInsertSync = Meteor.wrapAsync(theRaw.update, theRaw);
+        //var result = mongoInsertSync(allObjects);
+
+        bulkCollectionUpdate(LiveData, allObjects, {
+            callback: function () {
+                logger.info('LiveData updated.');
+            }
+        });
+
         //        LiveData.upsert({
         //            _id: site.AQSID + '_' + obj.epoch
         //        }, {
