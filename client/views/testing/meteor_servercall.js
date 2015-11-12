@@ -26,7 +26,7 @@ Template.passData.events = {
         });
     },
     'click #exportDataResult': function () {
-        Meteor.call('exportData', $('#site').val(), $('#start').val(), $('#end').val(), function (err, response) {
+        Meteor.call('exportData', $('#site').val(), $('#startexport').val(), $('#endexport').val(), function (err, response) {
             if (err) {
                 Session.set('serverExportDataResponse', 'Error:' + err.reason);
                 return;
