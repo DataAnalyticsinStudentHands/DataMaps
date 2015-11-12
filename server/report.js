@@ -10,7 +10,7 @@ function sendEmail(reportType, reportString) {
 
     var transporter = nodemailer.createTransport(directTransport());
     var mailOptions = {
-        from: 'Hnet <admin@hnet>',
+        from: 'Hnet Watcher <admin@hnet>',
         to: 'plindner@uh.edu',
         subject: reportType,
         text: reportString
