@@ -42,46 +42,69 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                     subObj.site = e.site;
                     subObj.epoch = e._id;
                     var subTypes = e.subTypes;
-                    subObj.test = subTypes;
                     var aggrSubTypes = {}; //hold subTypes
                     for (var i = 0; i < subTypes.length; i++) {
                         for (var subType in subTypes[i]) {
                             if (subTypes[i].hasOwnProperty(subType)) {
-                                aggrSubTypes[subType] = {};
                                 var data = subTypes[i][subType];
                                 if (data[0].val === 1) { //Flag should be valid
                                     for (var j = 1; j < data.length; j++) {
-                                        var newkey = data[j].metric;
-
-                                        if (j === 1) {
-                                            aggrSubTypes[subType][newkey] = [];
-                                            aggrSubTypes[subType][newkey] = [{
-                                                metric: 'sum',
-                                                val: data[j].val
-                                            }, {
-                                                metric: 'avg',
-                                                val: data[j].val
-                                            }, {
-                                                metric: 'numValid',
-                                                val: parseInt(1, 10)
-                                            }, {
-                                                metric: 'Flag',
-                                                val: 1
-                                            }];
+                                        var newkey = subType + '_' + data[j].metric;
+                                        if (!aggrSubTypes[newkey]) {
+                                            aggrSubTypes[newkey] = {
+                                                'sum': data[j].val,
+                                                'avg': data[j].val,
+                                                'numValid': parseInt(1, 10),
+                                                'Flag': 1
+                                            };
                                         } else {
-                                            aggrSubTypes[subType][newkey][0].val += data[j].val; //sum
-                                            aggrSubTypes[subType][newkey][1].val = aggrSubTypes[subType][newkey][0] / aggrSubTypes[subType][newkey][2]; //avg
-                                            aggrSubTypes[subType][newkey][2].val += 1; //numValid
+                                            aggrSubTypes[newkey].numValid += 1;
+                                            aggrSubTypes[newkey].sum += data[j].val; //holds sum until end
+                                            aggrSubTypes[newkey].avg = aggrSubTypes[newkey].sum / aggrSubTypes[newkey].numValid;
+
                                         }
-                                        //                                        if ((aggrSubTypes[subType][newkey][2] / i) < 0.75) {
-                                        //                                            aggrSubTypes[subType][newkey][3].val = 0; //should discuss how to use
-                                        //                                        }
+                                        if ((aggrSubTypes[newkey].numValid / i) < 0.75) {
+                                            aggrSubTypes[newkey].Flag = 0; //should discuss how to use
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                    subObj.subTypes = aggrSubTypes;
+                    //transform aggregated data to generic data format using subtypes etc.
+                    var newaggr = {};
+                    for (var aggr in aggrSubTypes) {
+                        if (aggrSubTypes.hasOwnProperty(aggr)) {
+                            var split = aggr.lastIndexOf('_');
+                            var instrument = aggr.substr(0, split);
+                            var measurement = aggr.substr(split + 1);
+                            if (!newaggr[instrument]) {
+                                newaggr[instrument] = {};
+                            }
+                            if (!newaggr[instrument][measurement]) {
+                                newaggr[instrument][measurement] = [];
+                            }
+                            var obj = aggrSubTypes[aggr];
+
+                            newaggr[instrument][measurement].push({
+                                metric: 'sum',
+                                val: obj.sum
+                            });
+                            newaggr[instrument][measurement].push({
+                                metric: 'avg',
+                                val: obj.avg
+                            });
+                            newaggr[instrument][measurement].push({
+                                metric: 'numValid',
+                                val: obj.numValid
+                            });
+                            newaggr[instrument][measurement].push({
+                                metric: 'Flag',
+                                val: obj.Flag
+                            });
+                        }
+                    }
+                    subObj.subTypes = newaggr;
                     AggrData.update({
                             _id: subObj._id
                         },
@@ -159,16 +182,9 @@ var batchLiveDataUpsert = Meteor.bindEnvironment(function (parsedLines, path) {
         }
         //LiveData.batchInsert(allObjects);
 
-        //var theRaw = LiveData.rawCollection();
-        //var mongoInsertSync = Meteor.wrapAsync(theRaw.update, theRaw);
-        //var result = mongoInsertSync(allObjects);
-
-        bulkCollectionUpdate(LiveData, allObjects, {
-            callback: function () {
-                logger.info('LiveData updated.');
-            }
-        });
-
+        var theRaw = LiveData.rawCollection();
+        var mongoInsertSync = Meteor.wrapAsync(theRaw.insert, theRaw);
+        var result = mongoInsertSync(allObjects);
         //        LiveData.upsert({
         //            _id: site.AQSID + '_' + obj.epoch
         //        }, {
