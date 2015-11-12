@@ -193,15 +193,20 @@ var batchLiveDataUpsert = Meteor.bindEnvironment(function (parsedLines, path) {
         //using bulCollectionUpdate
         bulkCollectionUpdate(LiveData, allObjects, {
             callback: function () {
-                logger.info('LiveData updated.');
+                
+                var nowEpoch = moment().unix();
+                var agoEpoch = moment.unix(nowEpoch).subtract(200, 'minutes').unix();
+
+                logger.info('LiveData updated for : ', site.AQSID, 'Calling aggr for epochs: ', agoEpoch, '-', nowEpoch);
+                perform5minAggregat(site.AQSID, agoEpoch, nowEpoch);
             }
         });
     }
 });
 
 
-var readFile = function (path) {
-
+var readFile = Meteor.bindEnvironment(function (path) {
+  
     fs.readFile(path, 'utf-8', function (err, output) {
         csvmodule.parse(output, {
             auto_parse: true,
@@ -210,22 +215,10 @@ var readFile = function (path) {
             if (err) {
                 logger.error(err);
             }
-
             batchLiveDataUpsert(parsedLines, path);
-            var nowEpoch = moment().unix();
-            var agoEpoch = moment.unix(nowEpoch).subtract(10, 'minutes').unix();
-
-            //find the site information
-            var pathArray = path.split('/');
-            var parentDir = pathArray[pathArray.length - 2];
-            var site = Monitors.find({
-                incoming: parentDir
-            }).fetch()[0];
-            
-            perform5minAggregat(site, agoEpoch, nowEpoch);
         });
     });
-};
+});
 
 Meteor.methods({
     new5minAggreg: function (siteId, startTime, endTime) {
