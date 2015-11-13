@@ -15,7 +15,6 @@ Router.route('/',{
 		mapCollectionDistance.set(1200);
         mapCollectionNumberVis = new ReactiveVar();
 		mapCollectionNumberVis.set(10);
-        Meteor.subscribe("monitors",'herenow');
     },
 	action: function () {
 		this.render();

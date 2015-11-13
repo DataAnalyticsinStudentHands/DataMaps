@@ -17,7 +17,7 @@ Template.mainMap.onRendered(function (){
 	      console.log('your position',pos)
 	      latude = pos.coords.latitude;
 	      lngtude = pos.coords.longitude
-		  AQmap.setView([latude,lngtude],18);
+		  AQmap.setView([latude,lngtude],9);
 		  var marker = L.marker([latude,lngtude],{title: 'You are here'}).addTo(AQmap);
 		  var contentHTML = '<div>This is where you are</div>'
 		  marker.bindPopup(contentHTML);
@@ -35,18 +35,20 @@ Template.mainMap.onRendered(function (){
 		//return [lngtude,latude];
 		console.log('inside geoloc')
 		console.log(latude,lngtude);
-		return [latude,lngtude];
+        Meteor.subscribe("monitors",[lngtude,latude]);
+		return [lngtude,latude];
 	};
 	var herenow = geoloc('hereNow'); //later for passing clicks, etc. - hereNow should allow to get around no navigator etc.
-    Meteor.subscribe("monitors",herenow);
-    console.log('Monitors:  '+Monitors.find().count());
+    console.log('herenow',herenow)
+//    Meteor.subscribe("monitors",herenow);
+    //console.log('Monitors:  '+Monitors.find().count());
     var markerMap = Monitors.find().observeChanges({ 
           added: function(id,line){
 //cf. AirDayWarn for loading
-            var marker = L.marker([line.loc.coordinates[1], line.loc.coordinates[0]],{title: line['Name']}).addTo(AQmap);
+            var marker = L.marker([line.loc.coordinates[1], line.loc.coordinates[0]],{title: line['site name']+line['AQSID']}).addTo(AQmap);
               //var content="<div><a> href={{pathFor 'currentsites' siteId='2'}}> pathfor this AQSID</a></div>"
-              //content="<div href={{pathFor 'currentsites' siteId='2'}}> pathfor this AQSID'</div>" line.AQSID);
-            //marker.bindPopup(content)
+              content="<a href='/currentsites/"+line.AQSID+"'> pathfor this AQSID"+line.AQSID+":  "+line['site name']+"</a>";
+            marker.bindPopup(content)
             //  //need the event listener to open it
             } //end of added
         
@@ -57,15 +59,15 @@ Template.mainMap.onRendered(function (){
 //    var AQmap = L.map('displayMap', {
 //            doubleClickZoom: false
 //        })
-    AQmap.setView(herenow,9)  //18 is the closest Leaflet zoom
-  .on('dblclick', function(e) {
-        Router.go('/currentsites/',{siteId: 'fuck'});
+    AQmap.setView(herenow,9);  //18 is the closest Leaflet zoom
+//  .on('dblclick', function(e) {
+//        Router.go('/currentsites/',{siteId: line.AQSID});
 //    console.log("Lat, Lon : " + e.latlng.lat + ", " + e.latlng.lng,mapCollectionDistance.get())
 //    Meteor.subscribe("Monitors",[e.latlng.lat,e.latlng.lng],mapCollectionDistance.get());
 //	mapCollectionNumberVis.set(Monitors.find().count())
 //      AQmap.setView(e.latlng,14);
-});
-    ; 
+//});
+//    ; 
         L.tileLayer.provider('OpenStreetMap.DE').addTo(AQmap);
   
 });
