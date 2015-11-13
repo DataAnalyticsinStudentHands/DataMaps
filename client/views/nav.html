@@ -1,7 +1,7 @@
 <template name="nav">
 	<div class="ui inverted blue top attached menu">
-<!--        <a class="{{isActiveRoute regex='mainMap'}} item" href="{{pathFor 'mainMap'}}">Home</a>-->
-			<a class="{{isActiveRoute regex='mainMap'}} item" href="{{pathFor 'mainMap' pos='dfsa'}}">Map</a>
+
+			<a class="{{isActiveRoute regex='mainMap'}} item" href="{{pathFor 'mainMap' pos='dfsa'}}">Home</a>
         {{#if isActiveRoute regex='currentsites'}}
                 <a id="showMenu" class="ui dropdown active item" href="{{pathFor 'currentsites'}}">
                     <div class="text" data-content="Shows Menu">Sites</div>
@@ -17,6 +17,7 @@
                     <div class="text">Sites</div>
                 </a>
             {{/if}}
+        <a class="{{isActiveRoute regex='testing'}} item" href="{{pathFor 'testing'}}">Generate</a>
 
 <!--			<a class="{{isActiveRoute regex='history'}} item" href="{{pathFor 'history'}}">History</a>-->
 <!--

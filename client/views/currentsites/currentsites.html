@@ -1,42 +1,5 @@
-<!-- <template name="currentsites">
-
-    <h2 align="center">The last 24h at <select id="siteselect">
-         {{#each currentSites}}
-         <option href="/currentsites">{{this}}</option>
-         {{/each}}
-         </select> </h2>
-<div id="container-chart-reactive" style="width: 100%"></div>
-
-</template> -->
-
-<!--
-<template name="menu">
-<select id="siteselect">
-         {{#each selectPacks}}
-         <option href="/currentsites">{{this}}</option>
-         {{/each}}
-         </select>
-</template>
--->
-
 <template name="currentsites">
-<!--
-    <select id="timeselect">
-        <option disabled selected>Select Time</option>
-	   <option>Previous 24 hours</option>
-	   <option>Previous hour</option>
-    </select>
-	<select id="keyselect">
-	         {{#each selectKeys}}
-	         <option>{{this}}</option>
-	         {{/each}}
-	         </select>
-    <select id="packselect">
-	         {{#each selectPacks}}
-	         <option>{{this}}</option>
-	         {{/each}}
-	         </select>
--->
+
     <!-- <h2 align="center">The last 24h at {{>menu}}  </h2> -->
     <select class="ui dropdown active item">
               <option class="item" value="site.AQSID">          <span id="siteselect" class="text">Select Location</span>{{sitename}}</option>
@@ -66,11 +29,5 @@
 <div id="container-chart-O3" style="width: 100%"></div>
 <div id="container-chart-RMY_Wind" style="width: 100%"></div>
 <div id="container-chart-HMP60" style="width: 100%"></div>
-<!--
-
-<div id="report"></div>
-    <button id="button">Update Selected Points</button>
-     <button id="button2">Remove Selected Points</button>
--->
 
 </template>

@@ -7,9 +7,3 @@ winston.add(winston.transports.DailyRotateFile, {
 });
 
 winston.info('Winston logs are being captured console and file (/var/log/meteor/datamaps.log)');
-
-AdminConfig = {
-  collections: {
-    //mapsdata: {}
-  }
-};
