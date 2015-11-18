@@ -1,21 +1,18 @@
-SubscribedLiveData = new Mongo.Collection('subcribedlive');
+Sites = new Mongo.Collection('sites');
 
-var site = new ReactiveVar();
-var time2find = new ReactiveVar();
-var subTypName = new ReactiveVar();
-var dataPacks = new ReactiveDict();
-var dataSeriesVar = new ReactiveVar();
-var dataSets = new ReactiveDict();
-
-var dataSeries = function (metron) {
-            return dataPacks.get(metron);
-        };
+var site = new ReactiveVar('482010570');
+var startEpoch = new ReactiveVar();
+var endEpoch = new ReactiveVar(moment().unix());
 
 var selectedPoints = null;
 
+Template.currentsites.onCreated(function () {
+    var sites4show = ['482010570', '481670571', '482010572'];
+    Meteor.subscribe('sites', sites4show);
+});
+
 Template.currentsites.onRendered(function () {
     Tracker.autorun(function () {
-        //console.log('params',this.params)
         //figure out which ones are to show, perhaps a dry run through the subscriptions, then ucontrol? 
         //favorites?
         //select date/time through highstock?
@@ -23,53 +20,43 @@ Template.currentsites.onRendered(function () {
         //add flags through the watcher on the publish (checking roles/permissions on server side)? 
         //select points
 
-        
+        var yesterday = moment().subtract(1, 'days').unix(); //24 hours ago - seconds
+        startEpoch.set(yesterday);
+        endEpoch.set(moment().unix());
+        console.log('site: ', site.get(), 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
+        Meteor.subscribe('livedata', site.get(), startEpoch.get(), endEpoch.get());
 
-        site.set('482010572'); //483390698//481670571//481570696 //481670697
-
-        var nowEpoch = moment('2015-11-03').subtract(3, 'days').unix(); //seconds
-        time2find.set(nowEpoch); //for testing 5196299900000 (uh)/5196294320000 /laptop
-        //var startEpoch = time2find.get();
-        
-        subTypName.set('O3'); //have in reactiveVar for selection
-        Meteor.subscribe('livedata', site.get(), '1447135215', '1447221602', subTypName.get());
-        
-        //var data = SubscribedLiveData.find({}).fetch();
-        
-        var pollutCursor = LiveData.find({});
-        //seems like ReactiveVar is a lot faster for retrieval
-        var dataFlags = new ReactiveDict();
-        
-        var pollutCursor5 = AggrData.find({});
-        console.log(pollutCursor5);
-        var dataSets5 = new ReactiveDict();
-        var dataFlags5 = new ReactiveDict();
-
-        
-        
-        
-        
-        
-        
-
-        pollutCursor.forEach(function (line) { 
-            _.each(line, function (key) {
-                
-                if (key.data) {
-                    _.each(key.data, function (subKey, subKeyname) {
-                        if (subKey.vals) {
-                            dataSets.set(key.name + '_' + subKeyname, subKey.vals);
-              
-                        }
-    
-                    });
+        LiveData.find({}).forEach(function (data) {
+            //Prepare data for plotting
+            var seriesCounter = 0,
+                seriesOptions = [];
+            $.each(data.datapoints, function (i, datapoints) {
+                seriesOptions.push({
+                    name: i,
+                    pointStart: startEpoch.get() * 1000,
+                    pointInterval: 10000, // for 10s data need to make dynamic
+                    data: datapoints
+                });
+                // As we're loading the data asynchronously, we don't know what order it will arrive. So
+                // we keep a counter and create the chart when all the data is loaded.
+                seriesCounter += 1;
+                if (seriesCounter === Object.keys(data.datapoints).length) {
+                    createCharts('container-chart-' + data._id, data._id, seriesOptions);
                 }
             });
         });
-        
-        var createCharts = function (chartName, subType, all) {
-            
-            var dataChart = $('#' + chartName).highcharts('StockChart', {
+
+        //        //seems like ReactiveVar is a lot faster for retrieval
+        //        var dataFlags = new ReactiveDict();
+        //
+        //        var pollutCursor5 = AggrData.find({});
+        //        console.log(pollutCursor5);
+        //        var dataSets5 = new ReactiveDict();
+        //        var dataFlags5 = new ReactiveDict();
+
+       function createCharts(chartName, subType, seriesOptions) {
+
+            $('#' + chartName).highcharts('StockChart', {
                 exporting: {
                     chartOptions: { // specific options for the exported image
                         plotOptions: {
@@ -121,57 +108,7 @@ Template.currentsites.onRendered(function () {
                         text: subType
                     }
                 },
-                //name, interval, etc., should come from the subscription
-                series: [{
-                        name: subType + ' 5 minute',
-                        type: 'scatter',
-                        pointStart: time2find.get() * 1000, //Date.UTC(2004, 3, 1), // first of April
-                        pointInterval: 300000, // need to make dynamic
-                        data: dataSets5.get(subType)
-                            //data: dataSets.get('data')
-			},
-                    {
-                        name: subType + ' 10 second',
-                        pointStart: time2find.get() * 1000, //Date.UTC(2004, 3, 1), // first of April
-                        pointInterval: 10000, // need to make dynamic
-                        data: dataSets.get(subType + '_conc')
-			},
-                    {
-                        name: subType + ' 10 second',
-                        pointStart: time2find.get() * 1000, //Date.UTC(2004, 3, 1), // first of April
-                        pointInterval: 10000, // need to make dynamic
-                        data: dataSets.get(subType + '_RH')
-			},
-                    {
-                        name: subType + ' 10 second',
-                        pointStart: time2find.get() * 1000, //Date.UTC(2004, 3, 1), // first of April
-                        pointInterval: 10000, // need to make dynamic
-                        data: dataSets.get(subType + '_Temp')
-			},
-                    {
-                        name: subType + ' Flags5',
-                        pointStart: time2find.get() * 1000, //Date.UTC(2004, 3, 1), // first of April
-                        pointInterval: 300000, //for Flags, now - 300 * 1000, // five minute data
-                        data: dataFlags5.get(subType)
-			},
-                    {
-                        name: subType + ' 10 second',
-                        pointStart: time2find.get() * 1000, //Date.UTC(2004, 3, 1), // first of April
-                        pointInterval: 10000, // need to make dynamic
-                        data: dataSets.get(subType + '_Direction')
-			},
-                    {
-                        name: subType + ' 10 second',
-                        pointStart: time2find.get() * 1000, //Date.UTC(2004, 3, 1), // first of April
-                        pointInterval: 10000, // need to make dynamic
-                        data: dataSets.get(subType + '_Speed')
-			},
-                    {
-                        name: subType + ' Flags',
-                        pointStart: time2find.get() * 1000, //Date.UTC(2004, 3, 1), // first of April
-                        pointInterval: 10000, //for Flags, now - 300 * 1000, // five minute data
-                        data: dataFlags.get(subType + '_Flag')
-					}],
+                series: seriesOptions,
                 plotOptions: {
                     series: {
                         events: {
@@ -185,14 +122,16 @@ Template.currentsites.onRendered(function () {
                         point: {
                             events: {
                                 select: function () {
-                                    var selectedPointsStr = '';
+                                    var selectedPointsStr = "";
                                     // when is the chart object updated? after this function finshes?
                                     var chart = this.series.chart;
                                     selectedPoints = chart.getSelectedPoints();
+                                    console.log(selectedPoints);
                                     selectedPoints.push(this);
                                     $.each(selectedPoints, function (i, value) {
                                         selectedPointsStr += "<br>" + value.category;
                                     });
+                                    //$report.html(selectedPointsStr);
                                 },
                                 mouseOver: function () {
                                     var chart = this.series.chart;
@@ -218,6 +157,7 @@ Template.currentsites.onRendered(function () {
                         }
                     }
                 },
+                turboThreshold: 100000,
                 tooltip: {
                     enabled: false
                 },
@@ -254,16 +194,12 @@ Template.currentsites.onRendered(function () {
                     selected: 2
                 }
             }); //end of chart 
-        };
-        
-        createCharts('container-chart-O3', 'O3');
-        createCharts('container-chart-RMY_Wind', 'RMY_Wind');
-        createCharts('container-chart-HMP60', 'HMP60');
+        }
     }); //end autorun
 }); //end of onRendered
 
 Template.currentsites.helpers({
-    
+
     sites: function () {
         var sites4show = ['482010570', '483390698', '481670571', '481570696', '481670697'];
         Meteor.subscribe('sites', sites4show);
@@ -272,21 +208,12 @@ Template.currentsites.helpers({
     sitename: function () {
         return site.get();
     }
-
 });
+
 Template.currentsites.events({
-    "change #siteselect": function (e) {
+    'change select': function (e) {
+        console.log('event', e.target.value);
         site.set(e.target.value);
-    },
-    "change #timeselect": function () {
-        dataSeriesVar.set(dataSeries('O3_conc'));
-    },
-    "click #packselect": function () {},
-    "change #packselect": function (event) {
-        dataSeriesVar.set('O3_' + event.currentTarget.value);
-    },
-    "change #keyselect": function (event) {
-        dataSeriesVar.set(dataSeries(event.currentTarget.value));
     },
     "click #export": function (e) {
         var chart = $('#container-chart-reactive').highcharts();

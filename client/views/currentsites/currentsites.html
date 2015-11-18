@@ -1,33 +1,23 @@
 <template name="currentsites">
 
-    <!-- <h2 align="center">The last 24h at {{>menu}}  </h2> -->
-    <select class="ui dropdown active item">
+    <!--<select class="ui dropdown active item">
               <option class="item" value="site.AQSID">          <span id="siteselect" class="text">Select Location</span>{{sitename}}</option>
                     {{#each sites}}
                         <option class="item" value="{{this.AQSID}}">{{this.name}}</option>
                     {{/each}}
-                </select>
-    <!-- <select class="ui dropdown active item">
-              <option class="item" value="site.AQSID">          <span id="siteselect" class="text">Select Time</span></option>
-                    {{#each sites}}
-                        <option class="item" value="site.AQSID">{{this.name}}</option>
-                    {{/each}}
-                </select>
-    <select class="ui dropdown active item">
-              <option class="item" value="site.AQSID">          <span id="siteselect" class="text">Select Measure</span></option>
-                    {{#each sites}}
-                        <option class="item" value="site.AQSID">site.name</option>
-                    {{/each}}
-                </select>
-    <select class="ui dropdown active item">
-              <option class="item" value="site.AQSID">          <span id="siteselect" class="text">Select Area</span></option> -->
-        <!--here have pull-down for cities of interest, with averages, etc.??
-                    {{#each sites}}
-                        <option class="item" value="site.AQSID">site.name</option>
-                    {{/each}}
                 </select>-->
-<div id="container-chart-O3" style="width: 100%"></div>
-<div id="container-chart-RMY_Wind" style="width: 100%"></div>
-<div id="container-chart-HMP60" style="width: 100%"></div>
 
+
+    <select class="ui dropdown active item">
+        <option value='482010570'>Clear Brooke Highschool</option>
+        <option value='481670571'>Clear Creek Highschool</option>
+        <option value='482010572'>Clear Lake Highschool</option>
+        
+    </select>
+
+    <div id="container-chart-O3" style="width: 100%"></div>
+    <div id="container-chart-RMY_Wind" style="width: 100%"></div>
+    <div id="container-chart-HMP60" style="width: 100%"></div>
+
+    <!--<div id="container-remote" style="min-width: 310px; height: 400px;"></div>-->
 </template>

@@ -107,6 +107,7 @@
         "bulkCollectionUpdate": false,
         "ReactiveVar": false,
         "ReactiveDict": false,
-        "Highcharts": false
+        "Highcharts": false,
+        "L": false
     }
 }
