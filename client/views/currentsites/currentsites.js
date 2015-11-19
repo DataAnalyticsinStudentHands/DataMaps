@@ -51,13 +51,32 @@ Template.currentsites.onRendered(function () {
                 }
             });
         });
+        
+        Meteor.subscribe('aggregatedata5min', site.get(), startEpoch.get(), endEpoch.get());
+        
+        AggrData.find({}).forEach(function (data) {
+            console.log('data: ', data);
+            //Prepare data for plotting
+//            var seriesCounter = 0,
+//                seriesOptions = [];
+//            $.each(data.datapoints, function (i, datapoints) {
+//                seriesOptions.push({
+//                    name: i,
+//                    pointStart: startEpoch.get() * 1000,
+//                    pointInterval: 10000, // for 10s data need to make dynamic
+//                    data: datapoints
+//                });
+//                // As we're loading the data asynchronously, we don't know what order it will arrive. So
+//                // we keep a counter and create the chart when all the data is loaded.
+//                seriesCounter += 1;
+//                if (seriesCounter === Object.keys(data.datapoints).length) {
+//                    createCharts('container-chart-' + data._id, data._id, seriesOptions);
+//                }
+//            });
+        });
 
         //        //seems like ReactiveVar is a lot faster for retrieval
         //        var dataFlags = new ReactiveDict();
-        //
-        //        var pollutCursor5 = AggrData.find({});
-        //        console.log(pollutCursor5);
-        //        var dataSets5 = new ReactiveDict();
         //        var dataFlags5 = new ReactiveDict();
 
        function createCharts(chartName, subType, seriesOptions) {
