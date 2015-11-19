@@ -6,6 +6,12 @@ var endEpoch = new ReactiveVar(moment().unix());
 
 var selectedPoints = null;
 
+Highcharts.setOptions({
+	global: {
+		useUTC: false
+	}
+});
+
 Template.currentsites.onCreated(function () {
     var sites4show = ['482010570', '481670571', '482010572'];
     Meteor.subscribe('sites', sites4show);
@@ -150,7 +156,7 @@ Template.currentsites.onRendered(function () {
                                     chart.lbl
                                         .show()
                                         .attr({
-                                            text: moment.utc(this.x).format('lll') + ', ' + this.series.name + ' val: ' + this.y.toFixed(2)
+                                            text: moment(this.x).format('lll') + ', ' + this.series.name + ' val: ' + this.y.toFixed(2)
                                         });
                                 }
                             }
