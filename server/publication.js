@@ -17,9 +17,9 @@ Meteor.publish('livedata', function (site, startEpoch, endEpoch) {
                     }]
             }
         },
-        {
-            $limit: 5 //testingpubsub
-        },
+//        {
+//            $limit: 5 //testingpubsub
+//        },
         {
             $sort: {
                 epoch: 1
@@ -50,7 +50,7 @@ Meteor.publish('livedata', function (site, startEpoch, endEpoch) {
                 });
             });
 
-        //console.log('polldatalive: ', pollData);
+            //console.log('polldatalive: ', pollData);
             for (var pubKey in pollData) {
                 if (pollData.hasOwnProperty(pubKey)) {
                     subscription.added('livedata', pubKey, {
@@ -70,68 +70,44 @@ Meteor.publish('aggregatedata5min', function (site, startEpoch, endEpoch) {
     var subscription = this;
     var pollData = {};
 
-    var aggPipe = [
-        {
-            $match: {
-                $and: [{
-                        site: site
+    AggrData.find({
+
+        $and: [{
+                site: site
                     },
-                    {
-                        epoch: {
-                            $gt: parseInt(startEpoch, 10),
-                            $lt: parseInt(endEpoch, 10)
-                        }
-                    }]
-            }
-        },
-        {
-            $limit: 1 //testingpubsub
-        },
-        {
-            $sort: {
-                epoch: 1
-            }
-        },
-        {
-            $project: {
-                subTypes: 1,
-                _id: 0
-            }
-        }
-	];
-
-    AggrData.aggregate(aggPipe, function (err, line) {
-            
-            //create new structure for data series to be used for charts
-            _.each(line, function (key) {
-                console.log('line: ', line);
-                _.each(key.subTypes, function (subKey, subType) { //subType is O3, etc.
-                    if (!pollData[subType]) {
-                        pollData[subType] = {};
-                    }
-                    _.each(subKey, function (sub) { //sub is the array with metric/val pairs as subarrays
-                        var keys = Object.keys(subKey);
-                        if (!pollData[subType][keys[0]]) {
-                            pollData[subType][keys[0]] = [];
-                        }
-                        pollData[subType][keys[0]].push(sub[0].val);
-                    });
-                });
-            });
-
-        console.log('polldata: ', pollData);
-            for (var pubKey in pollData) {
-                if (pollData.hasOwnProperty(pubKey)) {
-                    subscription.added('livedata', pubKey, {
-                        datapoints: pollData[pubKey]
-                    });
+            {
+                epoch: {
+                    $gt: parseInt(startEpoch, 10),
+                    $lt: parseInt(endEpoch, 10)
                 }
-            }
-        },
-        function (error) {
-            Meteor._debug('error during agg5min publication aggregation: ' + error);
+                    }]
+
+    }, {
+        sort: {
+            epoch: 1
         }
-    );
+    }).forEach(function (data) {
+        _.each(data.subTypes, function (subKey, subType) { //subType is O3, etc.
+            if (!pollData[subType]) {
+                pollData[subType] = {};
+            }
+            _.each(subKey, function (sub) { //sub is the array with metric/val pairs as subarrays
+                var keys = Object.keys(subKey);
+                if (!pollData[subType][keys[0]]) {
+                    pollData[subType][keys[0]] = [];
+                }
+                pollData[subType][keys[0]].push(sub[0].val);
+            });
+        });
+
+        for (var pubKey in pollData) {
+            if (pollData.hasOwnProperty(pubKey)) {
+                subscription.added('aggregatedata5min', pubKey, {
+                    datapoints: pollData[pubKey]
+                });
+            }
+        }
+    });
 });
 
 Meteor.publish('sites', function (sites4show) {

@@ -111,6 +111,7 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                             });
                         }
                     }
+
                     subObj.subTypes = newaggr;
                     AggrData.update({
                             _id: subObj._id
@@ -118,6 +119,7 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                         subObj, {
                             upsert: true
                         });
+
                 });
 
             },
@@ -193,7 +195,7 @@ var batchLiveDataUpsert = Meteor.bindEnvironment(function (parsedLines, path) {
         //using bulCollectionUpdate
         bulkCollectionUpdate(LiveData, allObjects, {
             callback: function () {
-                
+
                 var nowEpoch = moment().unix();
                 var agoEpoch = moment.unix(nowEpoch).subtract(200, 'minutes').unix();
 
@@ -206,7 +208,7 @@ var batchLiveDataUpsert = Meteor.bindEnvironment(function (parsedLines, path) {
 
 
 var readFile = Meteor.bindEnvironment(function (path) {
-  
+
     fs.readFile(path, 'utf-8', function (err, output) {
         csvmodule.parse(output, {
             auto_parse: true,

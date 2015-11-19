@@ -31,11 +31,14 @@ Template.currentsites.onRendered(function () {
         endEpoch.set(moment().unix());
         console.log('site: ', site.get(), 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
         Meteor.subscribe('livedata', site.get(), startEpoch.get(), endEpoch.get());
+        
+        var seriesOptions = [];
 
         LiveData.find({}).forEach(function (data) {
+            console.log('livedata: ', data);
             //Prepare data for plotting
-            var seriesCounter = 0,
-                seriesOptions = [];
+            var seriesCounter = 0;
+                
             $.each(data.datapoints, function (i, datapoints) {
                 seriesOptions.push({
                     name: i,
@@ -57,22 +60,22 @@ Template.currentsites.onRendered(function () {
         AggrData.find({}).forEach(function (data) {
             console.log('data: ', data);
             //Prepare data for plotting
-//            var seriesCounter = 0,
-//                seriesOptions = [];
-//            $.each(data.datapoints, function (i, datapoints) {
-//                seriesOptions.push({
-//                    name: i,
-//                    pointStart: startEpoch.get() * 1000,
-//                    pointInterval: 10000, // for 10s data need to make dynamic
-//                    data: datapoints
-//                });
-//                // As we're loading the data asynchronously, we don't know what order it will arrive. So
-//                // we keep a counter and create the chart when all the data is loaded.
-//                seriesCounter += 1;
-//                if (seriesCounter === Object.keys(data.datapoints).length) {
-//                    createCharts('container-chart-' + data._id, data._id, seriesOptions);
-//                }
-//            });
+            var seriesCounter = 0;
+            $.each(data.datapoints, function (i, datapoints) {
+                seriesOptions.push({
+                    name: i,
+                    type: 'scatter',
+                    pointStart: startEpoch.get() * 1000,
+                    pointInterval: 300000, // for 5min data need to make dynamic
+                    data: datapoints
+               });
+                // As we're loading the data asynchronously, we don't know what order it will arrive. So
+                // we keep a counter and create the chart when all the data is loaded.
+                seriesCounter += 1;
+                if (seriesCounter === Object.keys(data.datapoints).length) {
+                    createCharts('container-chart-' + data._id, data._id, seriesOptions);
+                }
+            });
         });
 
         //        //seems like ReactiveVar is a lot faster for retrieval
