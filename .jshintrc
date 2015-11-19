@@ -103,6 +103,7 @@
         "LiveData": false,
         "TCEQData": false,
         "AggrData": false,
+        "DataSeries": false,
         "Kadira": false,
         "bulkCollectionUpdate": false,
         "ReactiveVar": false,

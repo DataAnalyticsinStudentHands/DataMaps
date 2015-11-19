@@ -1,5 +1,3 @@
-Sites = new Mongo.Collection('sites');
-
 var site = new ReactiveVar('482010570');
 var startEpoch = new ReactiveVar();
 var endEpoch = new ReactiveVar(moment().unix());
@@ -7,9 +5,9 @@ var endEpoch = new ReactiveVar(moment().unix());
 var selectedPoints = null;
 
 Highcharts.setOptions({
-	global: {
-		useUTC: false
-	}
+    global: {
+        useUTC: false
+    }
 });
 
 Template.currentsites.onCreated(function () {
@@ -27,54 +25,32 @@ Template.currentsites.onRendered(function () {
         //select points
 
         var yesterday = moment().subtract(1, 'days').unix(); //24 hours ago - seconds
-        startEpoch.set(yesterday);
-        endEpoch.set(moment().unix());
+        //startEpoch.set(yesterday);
+        //endEpoch.set(moment().unix());
+        startEpoch.set(1447135215);
+        endEpoch.set(1447221602);
         console.log('site: ', site.get(), 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
-        Meteor.subscribe('livedata', site.get(), startEpoch.get(), endEpoch.get());
-        
-        var seriesOptions = [];
+        Meteor.subscribe('dataSeries', site.get(), startEpoch.get(), endEpoch.get());
 
-        LiveData.find({}).forEach(function (data) {
-            console.log('livedata: ', data);
-            //Prepare data for plotting
-            var seriesCounter = 0;
-                
-            $.each(data.datapoints, function (i, datapoints) {
-                seriesOptions.push({
+        var seriesOptions = {};
+
+        DataSeries.find({}).forEach(function (data) {
+            //Create data series for plotting
+            if (!seriesOptions[data.subType]) {
+                seriesOptions[data.subType] = [];
+            }
+            _.each(data.datapoints, function (datapoints, i) {
+                seriesOptions[data.subType].push({
                     name: i,
+                    type: data.chartType,
                     pointStart: startEpoch.get() * 1000,
-                    pointInterval: 10000, // for 10s data need to make dynamic
+                    pointInterval: data.pointInterval, 
                     data: datapoints
                 });
-                // As we're loading the data asynchronously, we don't know what order it will arrive. So
-                // we keep a counter and create the chart when all the data is loaded.
-                seriesCounter += 1;
-                if (seriesCounter === Object.keys(data.datapoints).length) {
-                    createCharts('container-chart-' + data._id, data._id, seriesOptions);
-                }
             });
-        });
-        
-        Meteor.subscribe('aggregatedata5min', site.get(), startEpoch.get(), endEpoch.get());
-        
-        AggrData.find({}).forEach(function (data) {
-            console.log('data: ', data);
-            //Prepare data for plotting
-            var seriesCounter = 0;
-            $.each(data.datapoints, function (i, datapoints) {
-                seriesOptions.push({
-                    name: i,
-                    type: 'scatter',
-                    pointStart: startEpoch.get() * 1000,
-                    pointInterval: 300000, // for 5min data need to make dynamic
-                    data: datapoints
-               });
-                // As we're loading the data asynchronously, we don't know what order it will arrive. So
-                // we keep a counter and create the chart when all the data is loaded.
-                seriesCounter += 1;
-                if (seriesCounter === Object.keys(data.datapoints).length) {
-                    createCharts('container-chart-' + data._id, data._id, seriesOptions);
-                }
+            _.each(seriesOptions, function (series, name) {
+                console.log('series : ', series, 'name: ', name);
+                createCharts('container-chart-' + name, name, series);
             });
         });
 
@@ -82,7 +58,7 @@ Template.currentsites.onRendered(function () {
         //        var dataFlags = new ReactiveDict();
         //        var dataFlags5 = new ReactiveDict();
 
-       function createCharts(chartName, subType, seriesOptions) {
+        function createCharts(chartName, subType, seriesOptions) {
 
             $('#' + chartName).highcharts('StockChart', {
                 exporting: {
@@ -244,6 +220,7 @@ Template.currentsites.events({
         site.set(e.target.value);
     },
     "click #export": function (e) {
+        console.log('event', e.target.value);
         var chart = $('#container-chart-reactive').highcharts();
         chart.exportChart({
             type: 'application/pdf',

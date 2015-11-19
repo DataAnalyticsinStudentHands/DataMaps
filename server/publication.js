@@ -1,4 +1,5 @@
-Meteor.publish('livedata', function (site, startEpoch, endEpoch) {
+//aggregation of data to be plotted with highstock
+Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
 
     var subscription = this;
     var pollData = {};
@@ -40,6 +41,7 @@ Meteor.publish('livedata', function (site, startEpoch, endEpoch) {
                     if (!pollData[subType]) {
                         pollData[subType] = {};
                     }
+
                     _.each(subKey, function (sub) { //sub is the array with metric/val pairs as subarrays
                         //if(subType==subTypName){ //reduces amount going to browser
                         if (!pollData[subType][sub.metric]) {
@@ -53,7 +55,10 @@ Meteor.publish('livedata', function (site, startEpoch, endEpoch) {
             //console.log('polldatalive: ', pollData);
             for (var pubKey in pollData) {
                 if (pollData.hasOwnProperty(pubKey)) {
-                    subscription.added('livedata', pubKey, {
+                    subscription.added('dataSeries', pubKey + '_10s', {
+                        subType: pubKey,
+                        chartType: 'line',
+                        pointInterval: 10000,
                         datapoints: pollData[pubKey]
                     });
                 }
@@ -64,50 +69,87 @@ Meteor.publish('livedata', function (site, startEpoch, endEpoch) {
         }
 
     );
-});
 
-Meteor.publish('aggregatedata5min', function (site, startEpoch, endEpoch) {
-    var subscription = this;
-    var pollData = {};
-
-    AggrData.find({
-
-        $and: [{
-                site: site
+    var agg5Pipe = [
+        {
+            $match: {
+                $and: [{
+                        site: site
                     },
-            {
-                epoch: {
-                    $gt: parseInt(startEpoch, 10),
-                    $lt: parseInt(endEpoch, 10)
-                }
+                    {
+                        epoch: {
+                            $gt: parseInt(startEpoch, 10),
+                            $lt: parseInt(endEpoch, 10)
+                        }
                     }]
-
-    }, {
-        sort: {
-            epoch: 1
-        }
-    }).forEach(function (data) {
-        _.each(data.subTypes, function (subKey, subType) { //subType is O3, etc.
-            if (!pollData[subType]) {
-                pollData[subType] = {};
             }
-            _.each(subKey, function (sub) { //sub is the array with metric/val pairs as subarrays
-                var keys = Object.keys(subKey);
-                if (!pollData[subType][keys[0]]) {
-                    pollData[subType][keys[0]] = [];
+        },
+//        {
+//            $limit: 5 //testingpubsub
+//        },
+        {
+            $sort: {
+                epoch: 1
+            }
+        },
+        {
+            $project: {
+                site: 1,
+                subTypes: 1,
+                _id: 0
+            }
+        },
+        {
+            $group: {
+                _id: '$site',
+                subTypes: {
+                    $push: '$subTypes'
                 }
-                pollData[subType][keys[0]].push(sub[0].val);
-            });
-        });
-
-        for (var pubKey in pollData) {
-            if (pollData.hasOwnProperty(pubKey)) {
-                subscription.added('aggregatedata5min', pubKey, {
-                    datapoints: pollData[pubKey]
-                });
             }
         }
-    });
+	];
+
+    AggrData.aggregate(agg5Pipe, function (err, result) {
+            //create new structure for data series to be used for charts
+            if (result.length > 0) {
+                var lines = result[0].subTypes;
+
+                _.each(lines, function (line) {
+                    _.each(line, function (subKey, subType) { //subType is O3, etc.              
+                        if (!pollData[subType]) {
+                            pollData[subType] = {};
+                        }
+                        _.each(subKey, function (sub, key) { //sub is the array with metric/val pairs as subarrays
+                            if (!pollData[subType][key]) { //create placeholder if not exists
+                                pollData[subType][key] = [];
+                            }
+                            if (!pollData[subType].Flag) { //create placeholder if not exists
+                                pollData[subType].Flag = [];
+                            }
+                            pollData[subType][key].push(sub[1].val);
+                            if (pollData[subType].Flag.length < lines.length) { //flags have to be pushed only for first loop since they should be the same for all subkeys
+                                pollData[subType].Flag.push(sub[3].val);
+                            }
+                        });
+                    });
+                });
+
+                for (var pubKey in pollData) {
+                    if (pollData.hasOwnProperty(pubKey)) {
+                        subscription.added('dataSeries', pubKey + '_5m', {
+                            subType: pubKey,
+                            chartType: 'scatter',
+                            pointInterval: 300000,
+                            datapoints: pollData[pubKey]
+                        });
+                    }
+                }
+            }
+        },
+        function (error) {
+            Meteor._debug('error during livedata publication aggregation: ' + error);
+        }
+    );
 });
 
 Meteor.publish('sites', function (sites4show) {
