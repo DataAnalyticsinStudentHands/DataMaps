@@ -27,8 +27,8 @@ Template.currentsites.onRendered(function () {
         var yesterday = moment().subtract(1, 'days').unix(); //24 hours ago - seconds
         //startEpoch.set(yesterday);
         //endEpoch.set(moment().unix());
-        startEpoch.set(1447135215);
-        endEpoch.set(1447221602);
+        startEpoch.set(1447826411);
+        endEpoch.set(1447902295);
         console.log('site: ', site.get(), 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
         Meteor.subscribe('dataSeries', site.get(), startEpoch.get(), endEpoch.get());
 
@@ -44,12 +44,16 @@ Template.currentsites.onRendered(function () {
                     name: i,
                     type: data.chartType,
                     pointStart: startEpoch.get() * 1000,
-                    pointInterval: data.pointInterval, 
-                    data: datapoints
+                    pointInterval: data.pointInterval,
+                    data: $.map(datapoints, function (value) {
+                    return isNaN(value) ? {
+                        y: null
+                    } : value;
+                })
                 });
             });
             _.each(seriesOptions, function (series, name) {
-                console.log('series : ', series, 'name: ', name);
+                console.log('series: ', series);
                 createCharts('container-chart-' + name, name, series);
             });
         });
@@ -178,7 +182,7 @@ Template.currentsites.onRendered(function () {
                         }
 			    }, {
                         type: 'minute',
-                        count: 1,
+                        count: 60,
                         text: 'Hour',
                         dataGrouping: {
                             forced: true,

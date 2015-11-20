@@ -2,7 +2,8 @@
 Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
 
     var subscription = this;
-    var pollData = {};
+    var pollData = {},
+        poll5Data = {};
 
     var aggPipe = [
         {
@@ -52,7 +53,7 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                 });
             });
 
-            //console.log('polldatalive: ', pollData);
+            console.log('polldatalive: ', pollData.O3.conc.length);
             for (var pubKey in pollData) {
                 if (pollData.hasOwnProperty(pubKey)) {
                     subscription.added('dataSeries', pubKey + '_10s', {
@@ -116,31 +117,31 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
 
                 _.each(lines, function (line) {
                     _.each(line, function (subKey, subType) { //subType is O3, etc.              
-                        if (!pollData[subType]) {
-                            pollData[subType] = {};
+                        if (!poll5Data[subType]) {
+                            poll5Data[subType] = {};
                         }
                         _.each(subKey, function (sub, key) { //sub is the array with metric/val pairs as subarrays
-                            if (!pollData[subType][key]) { //create placeholder if not exists
-                                pollData[subType][key] = [];
+                            if (!poll5Data[subType][key]) { //create placeholder if not exists
+                                poll5Data[subType][key] = [];
                             }
-                            if (!pollData[subType].Flag) { //create placeholder if not exists
-                                pollData[subType].Flag = [];
+                            if (!poll5Data[subType].Flag) { //create placeholder if not exists
+                                poll5Data[subType].Flag = [];
                             }
-                            pollData[subType][key].push(sub[1].val);
-                            if (pollData[subType].Flag.length < lines.length) { //flags have to be pushed only for first loop since they should be the same for all subkeys
-                                pollData[subType].Flag.push(sub[3].val);
+                            poll5Data[subType][key].push(sub[1].val);
+                            if (poll5Data[subType].Flag.length < lines.length) { //flags have to be pushed only for first loop since they should be the same for all subkeys
+                                poll5Data[subType].Flag.push(sub[3].val);
                             }
                         });
                     });
                 });
 
-                for (var pubKey in pollData) {
-                    if (pollData.hasOwnProperty(pubKey)) {
+                for (var pubKey in poll5Data) {
+                    if (poll5Data.hasOwnProperty(pubKey)) {
                         subscription.added('dataSeries', pubKey + '_5m', {
                             subType: pubKey,
                             chartType: 'scatter',
                             pointInterval: 300000,
-                            datapoints: pollData[pubKey]
+                            datapoints: poll5Data[pubKey]
                         });
                     }
                 }
