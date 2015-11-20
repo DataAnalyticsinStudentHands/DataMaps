@@ -6,7 +6,7 @@ Router.configure({
 		nav: {to: 'nav'}
 	    }
 });
-//Router.route('/:pos?',{ //should be an object with lat/lng
+
 Router.route('/',{
 	name: 'mainMap',
 	template:'mainMap',
@@ -20,8 +20,8 @@ Router.route('/',{
 		this.render();
 	}
 });
-Router.route('/currentsites/:siteId?', {
-//Router.route('/currentsites/', {
+
+Router.route('/currentsites/', {
 	name:'currentsites',
 	template:'currentsites',
     data: function(){ 
