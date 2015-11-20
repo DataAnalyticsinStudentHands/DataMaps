@@ -27,8 +27,8 @@ Template.currentsites.onRendered(function () {
         var yesterday = moment().subtract(1, 'days').unix(); //24 hours ago - seconds
         //startEpoch.set(yesterday);
         //endEpoch.set(moment().unix());
-        startEpoch.set(1447826411);
-        endEpoch.set(1447902295);
+        startEpoch.set(1447135215);
+        endEpoch.set(1447221602);
         console.log('site: ', site.get(), 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
         Meteor.subscribe('dataSeries', site.get(), startEpoch.get(), endEpoch.get());
 
@@ -43,13 +43,12 @@ Template.currentsites.onRendered(function () {
                 seriesOptions[data.subType].push({
                     name: i,
                     type: data.chartType,
-                    pointStart: startEpoch.get() * 1000,
-                    pointInterval: data.pointInterval,
-                    data: $.map(datapoints, function (value) {
-                    return isNaN(value) ? {
-                        y: null
-                    } : value;
-                })
+                    data: datapoints
+//                    data: $.map(datapoints, function (value) {
+//                    return isNaN(value) ? {
+//                        y: null
+//                    } : value;
+ //               })
                 });
             });
             _.each(seriesOptions, function (series, name) {
@@ -101,7 +100,7 @@ Template.currentsites.onRendered(function () {
                     zoomType: 'xy'
                 },
                 title: {
-                    text: subType + ' Readings at ' + site.get()
+                    text: subType + ' readings at ' + site.get()
                 },
                 credits: {
                     text: 'UH-HNET',
@@ -158,14 +157,13 @@ Template.currentsites.onRendered(function () {
                                     chart.lbl
                                         .show()
                                         .attr({
-                                            text: moment(this.x).format('lll') + ', ' + this.series.name + ' val: ' + this.y.toFixed(2)
+                                            text: moment(this.x).format('YYYY-MM-DD HH:mm:ss') + ', ' + this.series.name + ' val: ' + this.y.toFixed(2)
                                         });
                                 }
                             }
                         }
                     }
                 },
-                turboThreshold: 100000,
                 tooltip: {
                     enabled: false
                 },

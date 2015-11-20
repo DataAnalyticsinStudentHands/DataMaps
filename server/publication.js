@@ -29,37 +29,37 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
         },
         {
             $project: {
+                epoch: 1,
                 subTypes: 1,
                 _id: 0
             }
         }
 	];
 
-    LiveData.aggregate(aggPipe, function (err, line) {
+    LiveData.aggregate(aggPipe, function (err, results) {
             //create new structure for data series to be used for charts
-            _.each(line, function (key) {
-                _.each(key.subTypes, function (subKey, subType) { //subType is O3, etc.
+            _.each(results, function (line) {
+                var epoch = line.epoch;
+                _.each(line.subTypes, function (subKey, subType) { //subType is O3, etc.
                     if (!pollData[subType]) {
                         pollData[subType] = {};
                     }
-
                     _.each(subKey, function (sub) { //sub is the array with metric/val pairs as subarrays
                         //if(subType==subTypName){ //reduces amount going to browser
                         if (!pollData[subType][sub.metric]) {
                             pollData[subType][sub.metric] = [];
                         }
-                        pollData[subType][sub.metric].push(sub.val);
+                        var xy = [epoch * 1000, sub.val]; //milliseconds
+                        pollData[subType][sub.metric].push(xy);
                     });
                 });
             });
 
-            console.log('polldatalive: ', pollData.O3.conc.length);
             for (var pubKey in pollData) {
                 if (pollData.hasOwnProperty(pubKey)) {
                     subscription.added('dataSeries', pubKey + '_10s', {
                         subType: pubKey,
                         chartType: 'line',
-                        pointInterval: 10000,
                         datapoints: pollData[pubKey]
                     });
                 }
@@ -94,17 +94,14 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
             }
         },
         {
-            $project: {
-                site: 1,
-                subTypes: 1,
-                _id: 0
-            }
-        },
-        {
             $group: {
                 _id: '$site',
-                subTypes: {
-                    $push: '$subTypes'
+
+                series: {
+                    $push: {
+                        'subTypes': '$subTypes',
+                        'epoch': '$epoch'
+                    }
                 }
             }
         }
@@ -113,10 +110,11 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
     AggrData.aggregate(agg5Pipe, function (err, result) {
             //create new structure for data series to be used for charts
             if (result.length > 0) {
-                var lines = result[0].subTypes;
-
+                var lines = result[0].series;
                 _.each(lines, function (line) {
-                    _.each(line, function (subKey, subType) { //subType is O3, etc.              
+                    //console.log('line: ', line);
+                    var epoch = line.epoch;
+                    _.each(line.subTypes, function (subKey, subType) { //subType is O3, etc.              
                         if (!poll5Data[subType]) {
                             poll5Data[subType] = {};
                         }
@@ -127,9 +125,11 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                             if (!poll5Data[subType].Flag) { //create placeholder if not exists
                                 poll5Data[subType].Flag = [];
                             }
-                            poll5Data[subType][key].push(sub[1].val);
+                            var datapoint = {x: epoch * 1000, y: sub[1].val, color: 'red'}; //milliseconds
+                            poll5Data[subType][key].push(datapoint);
                             if (poll5Data[subType].Flag.length < lines.length) { //flags have to be pushed only for first loop since they should be the same for all subkeys
-                                poll5Data[subType].Flag.push(sub[3].val);
+                                var flagdatapoint = {x: epoch * 1000, y: sub[3].val, color: 'green'}; //milliseconds
+                                poll5Data[subType].Flag.push(flagdatapoint);
                             }
                         });
                     });
@@ -140,7 +140,6 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                         subscription.added('dataSeries', pubKey + '_5m', {
                             subType: pubKey,
                             chartType: 'scatter',
-                            pointInterval: 300000,
                             datapoints: poll5Data[pubKey]
                         });
                     }
