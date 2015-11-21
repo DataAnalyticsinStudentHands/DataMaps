@@ -24,9 +24,9 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                     }]
             }
         },
-        {
-            $limit: 5 //testingpubsub
-        },
+//        {
+//            $limit: 5 //testingpubsub
+//        },
         {
             $sort: {
                 epoch: 1

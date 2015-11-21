@@ -35,7 +35,6 @@ Template.currentsites.onRendered(function () {
         var seriesOptions = {};
 
         DataSeries.find({}).forEach(function (data) {
-            console.log('hello');
             //Create data series for plotting
             if (!seriesOptions[data.subType]) {
                 seriesOptions[data.subType] = [];
@@ -128,7 +127,8 @@ Template.currentsites.onRendered(function () {
                                     // when is the chart object updated? after this function finshes?
                                     var chart = this.series.chart;
                                     selectedPoints = chart.getSelectedPoints();
-                                    console.log(selectedPoints);
+                                    $('#editPointsModal').modal('show');
+                                    console.log('events: ', selectedPoints);
                                     selectedPoints.push(this);
                                     $.each(selectedPoints, function (i, value) {
                                         selectedPointsStr += "<br>" + value.category;

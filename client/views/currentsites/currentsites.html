@@ -16,8 +16,8 @@
                     <option value='482010572'>Clear Lake Highschool</option>
 
                 </select>
-            
-            
+
+
                 <div class="ui input">
                     <input type="date" data-format="EE, MMMM dd'th' yyyy">
                 </div>
@@ -38,5 +38,32 @@
         <div id="container-chart-HMP60" style="width: 100%"></div>
     </div>
 
-    <!--<div id="container-remote" style="min-width: 310px; height: 400px;"></div>-->
+    {{> editPointsTemplate}}
+</template>
+
+<template name="editPointsTemplate">
+    <div class="ui basic modal" id="editPointsModal">
+        <i class="close icon"></i>
+        <div class="header">
+            Archive Old Messages
+        </div>
+        <div class="image content">
+            <div class="image">
+                <i class="archive icon"></i>
+            </div>
+            <div class="description">
+                <p>Your inbox is getting full, would you like us to enable automatic archiving of old messages?</p>
+            </div>
+        </div>
+        <div class="actions">
+            <div class="two fluid ui inverted buttons">
+                <div class="ui red basic inverted button">
+                    <i class="remove icon"></i> No
+                </div>
+                <div class="ui green basic inverted button">
+                    <i class="checkmark icon"></i> Yes
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
