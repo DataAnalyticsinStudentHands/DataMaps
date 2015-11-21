@@ -1,9 +1,97 @@
+var flagColors = ['black', 'red', 'darkgreen'];
+
+
 //aggregation of data to be plotted with highstock
 Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
 
     var subscription = this;
     var pollData = {},
         poll5Data = {};
+
+
+
+    var agg5Pipe = [
+        {
+            $match: {
+                $and: [{
+                        site: site
+                    },
+                    {
+                        epoch: {
+                            $gt: parseInt(startEpoch, 10),
+                            $lt: parseInt(endEpoch, 10)
+                        }
+                    }]
+            }
+        },
+        {
+            $limit: 5 //testingpubsub
+        },
+        {
+            $sort: {
+                epoch: 1
+            }
+        },
+        {
+            $group: {
+                _id: '$site',
+
+                series: {
+                    $push: {
+                        'subTypes': '$subTypes',
+                        'epoch': '$epoch'
+                    }
+                }
+            }
+        }
+	];
+
+    AggrData.aggregate(agg5Pipe, function (err, result) {
+            //create new structure for data series to be used for charts
+            if (result.length > 0) {
+                var lines = result[0].series;
+                _.each(lines, function (line) {
+                    //console.log('line: ', line);
+                    var epoch = line.epoch;
+                    _.each(line.subTypes, function (subKey, subType) { //subType is O3, etc.              
+                        if (!poll5Data[subType]) {
+                            poll5Data[subType] = {};
+                        }
+                        _.each(subKey, function (sub, key) { //sub is the array with metric/val pairs as subarrays
+                            if (!poll5Data[subType][key]) { //create placeholder if not exists
+                                poll5Data[subType][key] = [];
+                            }
+
+                            if (key !== 'Flag') {
+                                var datapoint = {
+                                    x: epoch * 1000,
+                                    y: sub[1].val,
+                                    color: flagColors[sub[3].val]
+                                }; //milliseconds
+                                poll5Data[subType][key].push(datapoint);
+                            }
+                        });
+                    });
+                });
+
+                for (var pubKey in poll5Data) {
+                    if (poll5Data.hasOwnProperty(pubKey)) {
+                        subscription.added('dataSeries', pubKey + '_5m', {
+                            subType: pubKey,
+                            chartType: 'scatter',
+                            lineWidth: 0,
+                            allowPointSelect: 'true',
+                            datapoints: poll5Data[pubKey]
+                        });
+                    }
+                }
+            }
+        },
+        function (error) {
+            Meteor._debug('error during livedata publication aggregation: ' + error);
+        }
+    );
+
 
     var aggPipe = [
         {
@@ -46,11 +134,18 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                     }
                     _.each(subKey, function (sub) { //sub is the array with metric/val pairs as subarrays
                         //if(subType==subTypName){ //reduces amount going to browser
-                        if (!pollData[subType][sub.metric]) {
-                            pollData[subType][sub.metric] = [];
+
+                        if (sub.metric !== 'Flag') {
+                            if (!pollData[subType][sub.metric]) {
+                                pollData[subType][sub.metric] = [];
+                            }
+
+                            var xy = [epoch * 1000, sub.val]; //milliseconds
+                            if (isNaN(sub.val)) {
+                                xy = [epoch * 1000, null];
+                            }
+                            pollData[subType][sub.metric].push(xy);
                         }
-                        var xy = [epoch * 1000, sub.val]; //milliseconds
-                        pollData[subType][sub.metric].push(xy);
                     });
                 });
             });
@@ -60,6 +155,8 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                     subscription.added('dataSeries', pubKey + '_10s', {
                         subType: pubKey,
                         chartType: 'line',
+                        lineWidth: 1,
+                        allowPointSelect: 'false',
                         datapoints: pollData[pubKey]
                     });
                 }
@@ -69,86 +166,6 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
             Meteor._debug('error during livedata publication aggregation: ' + error);
         }
 
-    );
-
-    var agg5Pipe = [
-        {
-            $match: {
-                $and: [{
-                        site: site
-                    },
-                    {
-                        epoch: {
-                            $gt: parseInt(startEpoch, 10),
-                            $lt: parseInt(endEpoch, 10)
-                        }
-                    }]
-            }
-        },
-//        {
-//            $limit: 5 //testingpubsub
-//        },
-        {
-            $sort: {
-                epoch: 1
-            }
-        },
-        {
-            $group: {
-                _id: '$site',
-
-                series: {
-                    $push: {
-                        'subTypes': '$subTypes',
-                        'epoch': '$epoch'
-                    }
-                }
-            }
-        }
-	];
-
-    AggrData.aggregate(agg5Pipe, function (err, result) {
-            //create new structure for data series to be used for charts
-            if (result.length > 0) {
-                var lines = result[0].series;
-                _.each(lines, function (line) {
-                    //console.log('line: ', line);
-                    var epoch = line.epoch;
-                    _.each(line.subTypes, function (subKey, subType) { //subType is O3, etc.              
-                        if (!poll5Data[subType]) {
-                            poll5Data[subType] = {};
-                        }
-                        _.each(subKey, function (sub, key) { //sub is the array with metric/val pairs as subarrays
-                            if (!poll5Data[subType][key]) { //create placeholder if not exists
-                                poll5Data[subType][key] = [];
-                            }
-                            if (!poll5Data[subType].Flag) { //create placeholder if not exists
-                                poll5Data[subType].Flag = [];
-                            }
-                            var datapoint = {x: epoch * 1000, y: sub[1].val, color: 'red'}; //milliseconds
-                            poll5Data[subType][key].push(datapoint);
-                            if (poll5Data[subType].Flag.length < lines.length) { //flags have to be pushed only for first loop since they should be the same for all subkeys
-                                var flagdatapoint = {x: epoch * 1000, y: sub[3].val, color: 'green'}; //milliseconds
-                                poll5Data[subType].Flag.push(flagdatapoint);
-                            }
-                        });
-                    });
-                });
-
-                for (var pubKey in poll5Data) {
-                    if (poll5Data.hasOwnProperty(pubKey)) {
-                        subscription.added('dataSeries', pubKey + '_5m', {
-                            subType: pubKey,
-                            chartType: 'scatter',
-                            datapoints: poll5Data[pubKey]
-                        });
-                    }
-                }
-            }
-        },
-        function (error) {
-            Meteor._debug('error during livedata publication aggregation: ' + error);
-        }
     );
 });
 

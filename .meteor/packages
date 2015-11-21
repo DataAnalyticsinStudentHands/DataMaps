@@ -40,3 +40,4 @@ zimme:active-route
 semantic:ui-css
 jhuenges:highstock
 meteorhacks:kadira              # Remote performance watch
+makalu:better-dateinput-polyfill

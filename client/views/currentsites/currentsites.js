@@ -27,14 +27,15 @@ Template.currentsites.onRendered(function () {
         var yesterday = moment().subtract(1, 'days').unix(); //24 hours ago - seconds
         //startEpoch.set(yesterday);
         //endEpoch.set(moment().unix());
-        startEpoch.set(1447135215);
-        endEpoch.set(1447221602);
+        startEpoch.set(1447826411);
+        endEpoch.set(1447902295);
         console.log('site: ', site.get(), 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
         Meteor.subscribe('dataSeries', site.get(), startEpoch.get(), endEpoch.get());
 
         var seriesOptions = {};
 
         DataSeries.find({}).forEach(function (data) {
+            console.log('hello');
             //Create data series for plotting
             if (!seriesOptions[data.subType]) {
                 seriesOptions[data.subType] = [];
@@ -43,16 +44,14 @@ Template.currentsites.onRendered(function () {
                 seriesOptions[data.subType].push({
                     name: i,
                     type: data.chartType,
+                    lineWidth: data.lineWidth,
+                    allowPointSelect: data.allowPointSelect,
                     data: datapoints
-//                    data: $.map(datapoints, function (value) {
-//                    return isNaN(value) ? {
-//                        y: null
-//                    } : value;
- //               })
+
                 });
             });
             _.each(seriesOptions, function (series, name) {
-                console.log('series: ', series);
+                //console.log('series: ', series);
                 createCharts('container-chart-' + name, name, series);
             });
         });
@@ -79,20 +78,15 @@ Template.currentsites.onRendered(function () {
                 },
                 chart: {
                     events: {
-                        //click: function(){dataSeriesVar.set(dataSeries('O3'))},
                         selection: function (event) {
-                            console.log(event.xAxis[0].min);
-                            console.log(this.series[1].points.length);
                             for (var i = 0; i < this.series[0].points.length; i++) {
                                 var point = this.series[0].points[i];
                                 if (point.x > event.xAxis[0].min &&
                                     point.x < event.xAxis[0].max &&
                                     point.y > event.yAxis[0].min &&
                                     point.y < event.yAxis[0].max) {
-                                    //console.log(point)
                                     point.select(true, true);
                                 }
-
                             }
                             return false;
                         }
@@ -103,12 +97,11 @@ Template.currentsites.onRendered(function () {
                     text: subType + ' readings at ' + site.get()
                 },
                 credits: {
-                    text: 'UH-HNET',
-                    href: 'http://hnet.uh.edu'
-
+                    text: 'UH-HNET'
                 },
                 xAxis: {
-                    type: 'datetime'
+                    type: 'datetime',
+                    title: {text: 'Local Time'}
                 },
                 yAxis: {
                     title: {
@@ -125,7 +118,9 @@ Template.currentsites.onRendered(function () {
                                 }
                             }
                         },
-                        allowPointSelect: true,
+                        marker: {
+                            radius: 2
+                        },
                         point: {
                             events: {
                                 select: function () {
@@ -138,7 +133,6 @@ Template.currentsites.onRendered(function () {
                                     $.each(selectedPoints, function (i, value) {
                                         selectedPointsStr += "<br>" + value.category;
                                     });
-                                    //$report.html(selectedPointsStr);
                                 },
                                 mouseOver: function () {
                                     var chart = this.series.chart;
@@ -168,7 +162,7 @@ Template.currentsites.onRendered(function () {
                     enabled: false
                 },
                 rangeSelector: {
-                    //inputEnabled: true, //can't see what it does - thought it was for the dates.
+                    inputEnabled: false,
                     allButtonsEnabled: true,
                     buttons: [{
                         type: 'month',
