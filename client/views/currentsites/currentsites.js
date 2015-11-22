@@ -2,13 +2,62 @@ var site = new ReactiveVar('482010570');
 var startEpoch = new ReactiveVar();
 var endEpoch = new ReactiveVar(moment().unix());
 
-var selectedPoints = null;
+//var selectedPoints = [];
+SelectedPoints = new Mongo.Collection('selectedPoints');
 
 Highcharts.setOptions({
     global: {
         useUTC: false
     }
 });
+
+/**
+ * Custom selection handler that selects points and cancels the default zoom behaviour
+ */
+function selectPointsByDrag(e) {
+
+    // Select points
+    Highcharts.each(this.series, function (series) {
+        Highcharts.each(series.points, function (point) {
+            if (point.x >= e.xAxis[0].min && point.x <= e.xAxis[0].max &&
+                point.y >= e.yAxis[0].min && point.y <= e.yAxis[0].max) {
+                point.select(true, true);
+            }
+        });
+    });
+
+    // Fire a custom event
+    HighchartsAdapter.fireEvent(this, 'selectedpoints', {
+        points: this.getSelectedPoints()
+    });
+
+    return false; // Don't zoom
+}
+
+/**
+ * The handler for a custom event, fired from selection event
+ */
+function selectedPoints(e) {
+    _.each(e.points, function (point) {
+        if (point.series.type === 'scatter') {
+            console.log('point: ', point);
+            //SelectedPoints.insert(point);
+        }
+    });
+    $('#editPointsModal').modal('show');
+}
+
+/**
+ * On click, unselect all points
+ */
+function unselectByClick() {
+    var points = this.getSelectedPoints();
+    if (points.length > 0) {
+        Highcharts.each(points, function (point) {
+            point.select(false);
+        });
+    }
+}
 
 Template.currentsites.onCreated(function () {
     var sites4show = ['482010570', '481670571', '482010572'];
@@ -77,18 +126,9 @@ Template.currentsites.onRendered(function () {
                 },
                 chart: {
                     events: {
-                        selection: function (event) {
-                            for (var i = 0; i < this.series[0].points.length; i++) {
-                                var point = this.series[0].points[i];
-                                if (point.x > event.xAxis[0].min &&
-                                    point.x < event.xAxis[0].max &&
-                                    point.y > event.yAxis[0].min &&
-                                    point.y < event.yAxis[0].max) {
-                                    point.select(true, true);
-                                }
-                            }
-                            return false;
-                        }
+                        selection: selectPointsByDrag,
+                        selectedpoints: selectedPoints,
+                        click: unselectByClick
                     },
                     zoomType: 'xy'
                 },
@@ -100,7 +140,9 @@ Template.currentsites.onRendered(function () {
                 },
                 xAxis: {
                     type: 'datetime',
-                    title: {text: 'Local Time'}
+                    title: {
+                        text: 'Local Time'
+                    }
                 },
                 yAxis: {
                     title: {
@@ -122,18 +164,6 @@ Template.currentsites.onRendered(function () {
                         },
                         point: {
                             events: {
-                                select: function () {
-                                    var selectedPointsStr = "";
-                                    // when is the chart object updated? after this function finshes?
-                                    var chart = this.series.chart;
-                                    selectedPoints = chart.getSelectedPoints();
-                                    $('#editPointsModal').modal('show');
-                                    console.log('events: ', selectedPoints);
-                                    selectedPoints.push(this);
-                                    $.each(selectedPoints, function (i, value) {
-                                        selectedPointsStr += "<br>" + value.category;
-                                    });
-                                },
                                 mouseOver: function () {
                                     var chart = this.series.chart;
                                     if (!chart.lbl) {
@@ -192,11 +222,24 @@ Template.currentsites.onRendered(function () {
                         width: 60
                     },
                     selected: 2
+                },
+                legend: {
+                    enabled: true,
+                    align: 'right',
+                    backgroundColor: '#FCFFC5',
+                    borderColor: 'black',
+                    borderWidth: 2,
+                    layout: 'vertical',
+                    verticalAlign: 'top',
+                    y: 100,
+                    shadow: true
                 }
             }); //end of chart 
         }
     }); //end autorun
 }); //end of onRendered
+
+
 
 Template.currentsites.helpers({
 
@@ -207,6 +250,25 @@ Template.currentsites.helpers({
     },
     sitename: function () {
         return site.get();
+    }
+
+});
+
+Template.editPoints.helpers({
+    tasks: function () {
+
+        var test = [
+            {
+                text: "This is task 1"
+            },
+            {
+                text: "This is task 2"
+            },
+            {
+                text: "This is task 3"
+            }
+    ];
+        return test;
     }
 });
 

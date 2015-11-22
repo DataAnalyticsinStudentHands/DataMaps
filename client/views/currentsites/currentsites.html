@@ -11,9 +11,11 @@
         <div class="row">
             <div class="column">
                 <select class="ui dropdown">
+                    
                     <option value='482010570'>Clear Brooke Highschool</option>
                     <option value='481670571'>Clear Creek Highschool</option>
                     <option value='482010572'>Clear Lake Highschool</option>
+                    
 
                 </select>
 
@@ -23,36 +25,31 @@
                 </div>
             </div>
         </div>
-
-
-
-
-
-
-
-
-
-
         <div id="container-chart-O3" style="width: 100%"></div>
         <div id="container-chart-RMY_Wind" style="width: 100%"></div>
         <div id="container-chart-HMP60" style="width: 100%"></div>
     </div>
 
-    {{> editPointsTemplate}}
+    {{> editPoints}}
 </template>
 
-<template name="editPointsTemplate">
+<template name="editPoints">
     <div class="ui basic modal" id="editPointsModal">
         <i class="close icon"></i>
         <div class="header">
-            Archive Old Messages
+            Edit Points
         </div>
         <div class="image content">
             <div class="image">
                 <i class="archive icon"></i>
             </div>
             <div class="description">
-                <p>Your inbox is getting full, would you like us to enable automatic archiving of old messages?</p>
+                
+                <ul>
+      {{#each tasks}}
+        {{> task}}
+      {{/each}}
+    </ul>
             </div>
         </div>
         <div class="actions">
@@ -66,4 +63,8 @@
             </div>
         </div>
     </div>
+</template>
+
+<template name="task">
+  <li>{{Point}}</li>
 </template>

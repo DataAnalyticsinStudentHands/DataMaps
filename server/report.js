@@ -1,6 +1,6 @@
 //required packages
-var nodemailer = Meteor.npmRequire('nodemailer');
-var directTransport = Meteor.npmRequire('nodemailer-direct-transport');
+//var nodemailer = Meteor.npmRequire('nodemailer');
+//var directTransport = Meteor.npmRequire('nodemailer-direct-transport');
 var fs = Meteor.npmRequire('fs');
 var logger = Meteor.npmRequire('winston'); // this retrieves default logger which was configured in server.js
 
@@ -8,25 +8,16 @@ var lastPeriodicReportTime = 0;
 
 function sendEmail(reportType, reportString) {
 
-    var transporter = nodemailer.createTransport(directTransport());
-    var mailOptions = {
+    Email.send({
         from: 'Hnet Watcher <admin@hnet>',
         to: 'plindner@uh.edu',
         subject: reportType,
         text: reportString
-    };
-
-    transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-            logger.info('Can not send email. Error: ', error);
-        } else {
-            logger.info('Message sent: ', info);
-        }
     });
 }
 
 Meteor.setInterval(function () {
-    
+
     var watchedPath = '/hnet/incoming/2015/';
     var emergencyReportString = '';
     var periodicReportString = '';
@@ -46,20 +37,21 @@ Meteor.setInterval(function () {
                     periodicReportString = periodicReportString + 'Folder: ' + afolder + ' has no update since ' + moment(currentSiteMoment).format('YYYY/MM/DD, HH:mm:ss') + '\n';
                 } else {
                     periodicReportString = periodicReportString + 'Folder ' + afolder + ':  OK\n';
-                    
+
                 }
             });
         });
     });
-    setTimeout(function () {
+    
         if (emergencyReportString !== '') {
             logger.info(emergencyReportString);
-            //sendEmail('EMERGENCY Report', emergencyReportString);
+            sendEmail('Emergency Report', emergencyReportString);
+
         }
         if (moment() - lastPeriodicReportTime >= 30 * 60 * 1000) {
             logger.info(periodicReportString);
             //sendEmail('Site\'s periodic report', periodicReportString);
             lastPeriodicReportTime = moment();
         }
-    }, 2000);
+    
 }, 5 * 60 * 1000); // run every 5 min, to report a site is down immidiately
