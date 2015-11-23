@@ -1,18 +1,27 @@
 <template name="nav">
     <div class="ui inverted blue top attached menu">
 
-        <a class="{{isActiveRoute regex='mainMap'}} item" href="{{pathFor 'mainMap' pos='dfsa'}}">Home</a> {{#if isActiveRoute regex='currentsites'}}
-        <a id="showMenu" class="ui dropdown active item" href="{{pathFor 'currentsites'}}">
-            <div class="text" data-content="Shows Menu">Sites</div>
-        </a>
+        <a class="{{isActiveRoute regex='mainMap'}} item" href="{{pathFor 'mainMap' pos='dfsa'}}">Home</a>
+                    
+<!--
+                      {{#each sites}} 
+        <div class="item">
+          <a href="{{ pathFor 'site' }}"> {{> name}} </a>
+    </div>
+    {{/each}}
+-->
+        <a class="ui dropdown item">Sites
+                  <i class="dropdown icon"></i>
+                  <div class="menu">
+                    <div class="item"><a href="{{ pathFor 'site' _id='482010570'}}" style='color: black'>Clear Brooke Highschool</a></div>
+                    <div class="item"><a href="{{ pathFor 'site' _id='481670571'}}" style='color: black'>Clear Creek Highschool</a></div>
+                    <div class="item"><a href="{{ pathFor 'site' _id='482010572'}}" style='color: black'>Clear Lake Highschool</a></div>
+                  </div>
+                </a>
 
-        {{else}}
-        <a class="item" href="{{pathFor 'currentsites'}}">
-            <div class="text">Sites</div>
-        </a>
-        {{/if}}
-        <a class="{{isActiveRoute regex='testing'}} item" href="{{pathFor 'testing'}}">Generate</a>
 
-        <span style="position:absolute;right:0%;">{{> atNavButton}}</span>
+    <a class="{{isActiveRoute regex='testing'}} item" href="{{pathFor 'testing'}}">Generate</a>
+
+    <span style="position:absolute;right:0%;">{{> atNavButton}}</span>
     </div>
 </template>

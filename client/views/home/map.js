@@ -45,7 +45,7 @@ Template.mainMap.onRendered(function () {
                     title: line['site name'] + line.AQSID
                 }).addTo(AQmap);
                 
-                var content = "<a href='/currentsites/" + line.AQSID + "'> pathfor this AQSID" + line.AQSID + ":  " + line['site name'] + "</a>";
+                var content = "<a href='/site/" + line.AQSID + "'> pathfor this AQSID" + line.AQSID + ":  " + line['site name'] + "</a>";
                 marker.bindPopup(content);
             } //end of added
 

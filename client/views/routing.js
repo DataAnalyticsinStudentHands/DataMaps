@@ -1,63 +1,60 @@
 Router.configure({
     layoutTemplate: 'Frame',
-	loadingTemplate: 'loading',
+    loadingTemplate: 'loading',
     notFoundTemplate: 'pageNotFound',
-	yieldTemplates: {
-		nav: {to: 'nav'}
-	    }
+    yieldTemplates: {
+        nav: {
+            to: 'nav'
+        }
+    }
 });
 
-Router.route('/',{
-	name: 'mainMap',
-	template:'mainMap',
+Router.route('/', {
+    name: 'mainMap',
+    template: 'mainMap',
     data: function () {
-		mapCollectionDistance = new ReactiveVar();
-		mapCollectionDistance.set(1200);
+        mapCollectionDistance = new ReactiveVar();
+        mapCollectionDistance.set(1200);
         mapCollectionNumberVis = new ReactiveVar();
-		mapCollectionNumberVis.set(10);
+        mapCollectionNumberVis.set(10);
     },
-	action: function () {
-		this.render();
-	}
+    action: function () {
+        this.render();
+    }
 });
 
-Router.route('/currentsites/', {
-	name:'currentsites',
-	template:'currentsites',
-    data: function(){ 
-
-
+Router.route('site', {
+    path: '/site/:_id',
+    data: function () {
+        return Sites.findOne({
+            _id: this.params._id
+        });
     },
-	action: function () {
-		if (this.ready()) {
- 	      this.render();
-        }else{
-          this.render('loading')};
-	}
+    template: 'site'
 });
-Router.route('/history/',{
-     name: 'history',
-     template: 'history',
- 	 action: function () {
- 	    this.render();
- 	}
+Router.route('/history/', {
+    name: 'history',
+    template: 'history',
+    action: function () {
+        this.render();
+    }
 });
-Router.route('/admin/',{
-     name: 'admin',
-     template: 'admin',
- 	 action: function () {
- 	    this.render();
- 	}
+Router.route('/admin/', {
+    name: 'admin',
+    template: 'admin',
+    action: function () {
+        this.render();
+    }
 });
-Router.route('/testing/',{
-     name: 'testing',
-     template: 'passData',
- 	 action: function () {
- 	    this.render();
- 	}
+Router.route('/testing/', {
+    name: 'testing',
+    template: 'passData',
+    action: function () {
+        this.render();
+    }
 });
 Router.plugin('ensureSignedIn', {
-  only: ['currentsites','history','admin']
+    only: ['site', 'history', 'admin']
 });
 //AccountsTemplates.configureRoute('changePwd');
 AccountsTemplates.configureRoute('enrollAccount');
@@ -66,5 +63,3 @@ AccountsTemplates.configureRoute('resetPwd');
 AccountsTemplates.configureRoute('signIn');
 AccountsTemplates.configureRoute('signUp');
 AccountsTemplates.configureRoute('verifyEmail');
-
-

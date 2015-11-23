@@ -104,11 +104,13 @@
         "TCEQData": false,
         "AggrData": false,
         "DataSeries": false,
+        "Sites": false,
         "Kadira": false,
         "bulkCollectionUpdate": false,
         "ReactiveVar": false,
         "ReactiveDict": false,
         "Highcharts": false,
+        "HighchartsAdapter": false,
         "L": false
     }
 }

@@ -1,5 +1,4 @@
-var site = new ReactiveVar('482010570');
-var startEpoch = new ReactiveVar();
+var startEpoch = new ReactiveVar(moment().subtract(1, 'days').unix()); //24 hours ago - seconds
 var endEpoch = new ReactiveVar(moment().unix());
 
 Highcharts.setOptions({
@@ -8,7 +7,14 @@ Highcharts.setOptions({
     }
 });
 
-var MyCollection = new Mongo.Collection(null);
+//pass null as collection name, it will create
+//local only collection
+var EditPoints = new Mongo.Collection(null);
+var flagsHash = {
+    0: 'black',
+    K: 'red',
+    Q: 'darkgreen'
+};
 
 /**
  * Custom selection handler that selects points and cancels the default zoom behaviour
@@ -37,12 +43,25 @@ function selectPointsByDrag(e) {
  * The handler for a custom event, fired from selection event
  */
 function selectedPoints(e) {
+    var points = [];
     _.each(e.points, function (point) {
         if (point.series.type === 'scatter') {
-            console.log('point: ', point);
-            MyCollection.insert(point);
+            //console.log('point: ', point);
+            var selectedPoint = {};
+            //selectedPoint.id = point.category;
+            selectedPoint.x = point.x;
+            selectedPoint.y = point.y;
+            selectedPoint.Flag = (_.invert(flagsHash))[point.color];
+            points.push(selectedPoint);
         }
     });
+
+
+    console.log('Points: ', points);
+    for (var i = 0; i < points.length; i++) {
+        EditPoints.insert(points[i]);
+    }
+
     $('#editPointsModal').modal('show');
 }
 
@@ -58,12 +77,7 @@ function unselectByClick() {
     }
 }
 
-Template.currentsites.onCreated(function () {
-    var sites4show = ['482010570', '481670571', '482010572'];
-    Meteor.subscribe('sites', sites4show);
-});
-
-Template.currentsites.onRendered(function () {
+Template.site.onRendered(function () {
     Tracker.autorun(function () {
         //figure out which ones are to show, perhaps a dry run through the subscriptions, then ucontrol? 
         //favorites?
@@ -72,13 +86,12 @@ Template.currentsites.onRendered(function () {
         //add flags through the watcher on the publish (checking roles/permissions on server side)? 
         //select points
 
-        var yesterday = moment().subtract(1, 'days').unix(); //24 hours ago - seconds
-        //startEpoch.set(yesterday);
-        //endEpoch.set(moment().unix());
-        startEpoch.set(1447826411);
-        endEpoch.set(1447902295);
-        console.log('site: ', site.get(), 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
-        Meteor.subscribe('dataSeries', site.get(), startEpoch.get(), endEpoch.get());
+        
+        endEpoch.set(moment().unix());
+
+        var site = Router.current().params._id;
+        console.log('site: ', site, 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
+        Meteor.subscribe('dataSeries', site, startEpoch.get(), endEpoch.get());
 
         var seriesOptions = {};
 
@@ -132,7 +145,7 @@ Template.currentsites.onRendered(function () {
                     zoomType: 'xy'
                 },
                 title: {
-                    text: subType + ' readings at ' + site.get()
+                    text: subType + ' readings at ' + site
                 },
                 credits: {
                     text: 'UH-HNET'
@@ -180,7 +193,7 @@ Template.currentsites.onRendered(function () {
                                     chart.lbl
                                         .show()
                                         .attr({
-                                            text: moment(this.x).format('YYYY-MM-DD HH:mm:ss') + ', ' + this.series.name + ' val: ' + this.y.toFixed(2)
+                                            text: moment(this.x).format('YYYY/MM/DD HH:mm:ss') + ', ' + this.series.name + ' val: ' + this.y.toFixed(2)
                                         });
                                 }
                             }
@@ -220,7 +233,7 @@ Template.currentsites.onRendered(function () {
                     buttonTheme: {
                         width: 60
                     },
-                    selected: 2
+                    selected: 1
                 },
                 legend: {
                     enabled: true,
@@ -239,42 +252,27 @@ Template.currentsites.onRendered(function () {
 }); //end of onRendered
 
 
-
-Template.currentsites.helpers({
-
-    sites: function () {
-        var sites4show = ['482010570', '483390698', '481670571', '481570696', '481670697'];
-        Meteor.subscribe('sites', sites4show);
-        return Monitors.find({});
-    },
-    sitename: function () {
-        return site.get();
-    }
-
+Template.editPoints.onRendered(function () {
+    //Need to call dropdown render
+    this.$('.ui.dropdown').dropdown();
 });
 
 Template.editPoints.helpers({
-    tasks: function () {
-
-        var test = [
-            {
-                text: "This is task 1"
-            },
-            {
-                text: "This is task 2"
-            },
-            {
-                text: "This is task 3"
-            }
-    ];
-        return MyCollection.find({});
+    points: function () {
+        return EditPoints.find({});
     }
 });
 
-Template.currentsites.events({
-    'change select': function (e) {
-        console.log('event', e.target.value);
-        site.set(e.target.value);
+Template.registerHelper('formatDate', function (epoch) {
+    return moment(epoch).format('YYYY/MM/DD HH:mm:ss');
+});
+
+Template.site.events({
+    'change #datepicker': function (event) {
+        console.log('event:', event.target.value);
+        
+        console.log("converted: ", moment(event.target.value, 'YYYY-MM-DD').unix());
+        startEpoch.set(moment(event.target.value, 'YYYY-MM-DD').unix());
     },
     "click #export": function (e) {
         console.log('event', e.target.value);
