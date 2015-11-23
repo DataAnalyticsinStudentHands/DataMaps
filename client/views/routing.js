@@ -32,13 +32,7 @@ Router.route('site', {
     },
     template: 'site'
 });
-Router.route('/history/', {
-    name: 'history',
-    template: 'history',
-    action: function () {
-        this.render();
-    }
-});
+
 Router.route('/admin/', {
     name: 'admin',
     template: 'admin',
@@ -54,7 +48,7 @@ Router.route('/testing/', {
     }
 });
 Router.plugin('ensureSignedIn', {
-    only: ['site', 'history', 'admin']
+    only: ['site', 'admin']
 });
 //AccountsTemplates.configureRoute('changePwd');
 AccountsTemplates.configureRoute('enrollAccount');

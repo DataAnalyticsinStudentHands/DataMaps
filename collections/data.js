@@ -4,7 +4,7 @@ AggrData = new Mongo.Collection('aggregatedata5min');
 
 DataSeries = new Mongo.Collection('dataSeries');
 
-//the following should be handled by favourites
+//the following should be handled by favorites
 Sites = new Meteor.Collection('sites');
 
 if (Meteor.isServer) {

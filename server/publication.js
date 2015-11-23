@@ -8,8 +8,6 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
     var pollData = {},
         poll5Data = {};
 
-
-
     var agg5Pipe = [
         {
             $match: {
@@ -85,10 +83,11 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                         });
                     }
                 }
+                
             }
         },
         function (error) {
-            Meteor._debug('error during livedata publication aggregation: ' + error);
+            Meteor._debug('error during 5min publication aggregation: ' + error);
         }
     );
 
@@ -107,9 +106,9 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                     }]
             }
         },
-        {
-            $limit: 5 //testingpubsub
-        },
+//        {
+//            $limit: 5 //testingpubsub
+//        },
         {
             $sort: {
                 epoch: 1
@@ -161,23 +160,13 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                     });
                 }
             }
+        
         },
         function (error) {
             Meteor._debug('error during livedata publication aggregation: ' + error);
         }
 
     );
-});
-
-Meteor.publish('sites', function (sites4show) {
-    return Monitors.find({
-        AQSID: {
-            $in: sites4show
-        }
-    }, {
-        AQSID: 1,
-        name: 1
-    });
 });
 
 Meteor.publish('monitors', function (latLng) {
@@ -207,10 +196,4 @@ Meteor.publish('userData', function () {
     } else {
         this.ready();
     }
-});
-
-Meteor.publish('favorites', function () {
-    return Favorites.find({
-        owner: this.userId
-    });
 });

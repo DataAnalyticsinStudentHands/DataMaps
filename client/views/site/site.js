@@ -1,5 +1,6 @@
 var startEpoch = new ReactiveVar(moment().subtract(1, 'days').unix()); //24 hours ago - seconds
 var endEpoch = new ReactiveVar(moment().unix());
+var foundData = false;
 
 Highcharts.setOptions({
     global: {
@@ -64,6 +65,7 @@ function selectedPoints(e) {
 
     $('#editPointsModal').modal('show');
 }
+var autoCounter = 1;
 
 /**
  * On click, unselect all points
@@ -79,23 +81,33 @@ function unselectByClick() {
 
 Template.site.onRendered(function () {
     Tracker.autorun(function () {
-        //figure out which ones are to show, perhaps a dry run through the subscriptions, then ucontrol? 
-        //favorites?
-        //select date/time through highstock?
         //add notes to documents?
-        //add flags through the watcher on the publish (checking roles/permissions on server side)? 
-        //select points
+        //need to figure out better use of Tracker
 
-        
-        endEpoch.set(moment().unix());
-
+        autoCounter += 1;
+        console.log('auto counter:', autoCounter);
         var site = Router.current().params._id;
         console.log('site: ', site, 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
         Meteor.subscribe('dataSeries', site, startEpoch.get(), endEpoch.get());
 
+        //destroy existing charts, should be dynamic
+        if ($('#container-chart-O3').highcharts()) {
+            $('#container-chart-O3').highcharts().destroy();
+        }
+
+        if ($('#container-chart-RMY_Wind').highcharts()) {
+            $('#container-chart-RMY_Wind').highcharts().destroy();
+        }
+
+        if ($('#container-chart-HMP60').highcharts()) {
+            $('#container-chart-HMP60').highcharts().destroy();
+        }
+        foundData = false;
+
         var seriesOptions = {};
 
         DataSeries.find({}).forEach(function (data) {
+            foundData = true;
             //Create data series for plotting
             if (!seriesOptions[data.subType]) {
                 seriesOptions[data.subType] = [];
@@ -111,14 +123,9 @@ Template.site.onRendered(function () {
                 });
             });
             _.each(seriesOptions, function (series, name) {
-                //console.log('series: ', series);
                 createCharts('container-chart-' + name, name, series);
             });
         });
-
-        //        //seems like ReactiveVar is a lot faster for retrieval
-        //        var dataFlags = new ReactiveDict();
-        //        var dataFlags5 = new ReactiveDict();
 
         function createCharts(chartName, subType, seriesOptions) {
 
@@ -233,7 +240,7 @@ Template.site.onRendered(function () {
                     buttonTheme: {
                         width: 60
                     },
-                    selected: 1
+                    selected: 2
                 },
                 legend: {
                     enabled: true,
@@ -267,12 +274,23 @@ Template.registerHelper('formatDate', function (epoch) {
     return moment(epoch).format('YYYY/MM/DD HH:mm:ss');
 });
 
+Template.site.helpers({
+    foundSite: function () {
+        if (!foundData){
+            return 'No data found for selected site and date.';
+        }
+    },
+    name: function () {
+        console.log('soem:', Router.current().params._id);
+        return Sites.findOne({_id: Router.current().params._id});
+        
+    }
+});
+
 Template.site.events({
     'change #datepicker': function (event) {
-        console.log('event:', event.target.value);
-        
-        console.log("converted: ", moment(event.target.value, 'YYYY-MM-DD').unix());
         startEpoch.set(moment(event.target.value, 'YYYY-MM-DD').unix());
+        endEpoch.set(moment.unix(startEpoch.get()).add(1, 'days').unix()); //always to current?
     },
     "click #export": function (e) {
         console.log('event', e.target.value);
