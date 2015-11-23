@@ -2,14 +2,13 @@ var site = new ReactiveVar('482010570');
 var startEpoch = new ReactiveVar();
 var endEpoch = new ReactiveVar(moment().unix());
 
-//var selectedPoints = [];
-SelectedPoints = new Mongo.Collection('selectedPoints');
-
 Highcharts.setOptions({
     global: {
         useUTC: false
     }
 });
+
+var MyCollection = new Mongo.Collection(null);
 
 /**
  * Custom selection handler that selects points and cancels the default zoom behaviour
@@ -41,7 +40,7 @@ function selectedPoints(e) {
     _.each(e.points, function (point) {
         if (point.series.type === 'scatter') {
             console.log('point: ', point);
-            //SelectedPoints.insert(point);
+            MyCollection.insert(point);
         }
     });
     $('#editPointsModal').modal('show');
@@ -268,7 +267,7 @@ Template.editPoints.helpers({
                 text: "This is task 3"
             }
     ];
-        return test;
+        return MyCollection.find({});
     }
 });
 
