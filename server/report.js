@@ -1,6 +1,4 @@
 //required packages
-//var nodemailer = Meteor.npmRequire('nodemailer');
-//var directTransport = Meteor.npmRequire('nodemailer-direct-transport');
 var fs = Meteor.npmRequire('fs');
 var logger = Meteor.npmRequire('winston'); // this retrieves default logger which was configured in server.js
 
@@ -8,11 +6,20 @@ var lastPeriodicReportTime = 0;
 
 function sendEmail(reportType, reportString) {
 
-    Email.send({
+    var transporter = Nodemailer.createTransport();
+    var mailOptions = {
         from: 'Hnet Watcher <admin@hnet>',
         to: 'plindner@uh.edu',
         subject: reportType,
         text: reportString
+    };
+
+    transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+            logger.info('Can not send email. Error: ', error);
+        } else {
+            logger.info('Message sent: ', info);
+        }
     });
 }
 

@@ -83,7 +83,7 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                         });
                     }
                 }
-                
+
             }
         },
         function (error) {
@@ -160,7 +160,7 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                     });
                 }
             }
-        
+
         },
         function (error) {
             Meteor._debug('error during livedata publication aggregation: ' + error);
@@ -181,6 +181,10 @@ Meteor.publish('monitors', function (latLng) {
             }
         }
     });
+});
+
+Meteor.publish('sites', function () {
+    return Sites.find({});
 });
 
 Meteor.publish('userData', function () {

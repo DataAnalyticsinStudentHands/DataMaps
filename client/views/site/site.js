@@ -1,6 +1,7 @@
 var startEpoch = new ReactiveVar(moment().subtract(1, 'days').unix()); //24 hours ago - seconds
 var endEpoch = new ReactiveVar(moment().unix());
-var foundData = false;
+
+Meteor.subscribe('sites');
 
 Highcharts.setOptions({
     global: {
@@ -86,9 +87,8 @@ Template.site.onRendered(function () {
 
         autoCounter += 1;
         console.log('auto counter:', autoCounter);
-        var site = Router.current().params._id;
-        console.log('site: ', site, 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
-        Meteor.subscribe('dataSeries', site, startEpoch.get(), endEpoch.get());
+        console.log('site: ', Router.current().params._id, 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
+        Meteor.subscribe('dataSeries', Router.current().params._id, startEpoch.get(), endEpoch.get());
 
         //destroy existing charts, should be dynamic
         if ($('#container-chart-O3').highcharts()) {
@@ -102,19 +102,19 @@ Template.site.onRendered(function () {
         if ($('#container-chart-HMP60').highcharts()) {
             $('#container-chart-HMP60').highcharts().destroy();
         }
-        foundData = false;
-
+    
         var seriesOptions = {};
 
-        DataSeries.find({}).forEach(function (data) {
-            foundData = true;
+        var allSeries = DataSeries.find({}).fetch();
+        _.each(allSeries, function (data) {
+            console.log('data: ', data);
             //Create data series for plotting
             if (!seriesOptions[data.subType]) {
                 seriesOptions[data.subType] = [];
             }
             _.each(data.datapoints, function (datapoints, i) {
                 seriesOptions[data.subType].push({
-                    name: i,
+                    name: i + ' ' + data._id.split(/[_]+/).pop(),
                     type: data.chartType,
                     lineWidth: data.lineWidth,
                     allowPointSelect: data.allowPointSelect,
@@ -122,13 +122,22 @@ Template.site.onRendered(function () {
 
                 });
             });
-            _.each(seriesOptions, function (series, name) {
-                createCharts('container-chart-' + name, name, series);
-            });
+           
         });
-
+        
+        console.log('seriesOptions: ', seriesOptions);
+        if (Object.keys(seriesOptions).length === 0) {
+            console.log('hello');
+            var emptySeries = [];
+            createCharts('container-chart-' + name, name, emptySeries);
+        }
+        
+        
+        _.each(seriesOptions, function (series, name) {
+            createCharts('container-chart-' + name, name, series);
+        });
+        
         function createCharts(chartName, subType, seriesOptions) {
-
             $('#' + chartName).highcharts('StockChart', {
                 exporting: {
                     chartOptions: { // specific options for the exported image
@@ -152,10 +161,7 @@ Template.site.onRendered(function () {
                     zoomType: 'xy'
                 },
                 title: {
-                    text: subType + ' readings at ' + site
-                },
-                credits: {
-                    text: 'UH-HNET'
+                    text: subType
                 },
                 xAxis: {
                     type: 'datetime',
@@ -245,13 +251,9 @@ Template.site.onRendered(function () {
                 legend: {
                     enabled: true,
                     align: 'right',
-                    backgroundColor: '#FCFFC5',
-                    borderColor: 'black',
-                    borderWidth: 2,
                     layout: 'vertical',
                     verticalAlign: 'top',
-                    y: 100,
-                    shadow: true
+                    y: 100
                 }
             }); //end of chart 
         }
@@ -275,16 +277,10 @@ Template.registerHelper('formatDate', function (epoch) {
 });
 
 Template.site.helpers({
-    foundSite: function () {
-        if (!foundData){
-            return 'No data found for selected site and date.';
-        }
-    },
-    name: function () {
-        console.log('soem:', Router.current().params._id);
+    site: function () {
         return Sites.findOne({_id: Router.current().params._id});
-        
-    }
+    },
+    selectedDate: moment.unix(startEpoch.get()).format('YYYY-MM-DD')
 });
 
 Template.site.events({

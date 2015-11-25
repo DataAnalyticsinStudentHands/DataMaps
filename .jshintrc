@@ -98,6 +98,7 @@
         "winston": false,
         "JSON": false,
         "Mongo": false,
+        "Nodemailer": false,
         "Monitors": false,
         "LiveData": false,
         "TCEQData": false,

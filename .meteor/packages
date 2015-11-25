@@ -7,7 +7,6 @@
 mdg:geolocation
 iron:router
 accounts-password
-email
 meteorhacks:npm                 # Handling of npm packages
 npm-container                   # Handling of npm packages
 momentjs:moment                 # Time calculations
@@ -42,3 +41,4 @@ meteorhacks:kadira              # Remote performance watch
 makalu:better-dateinput-polyfill
 semantic:ui
 flemay:less-autoprefixer
+epaminond:nodemailer

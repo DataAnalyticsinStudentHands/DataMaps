@@ -2,26 +2,23 @@
             
                     <div class="ui message">
                         <div class="header">
-                            Site: {{name}}
+                            Site: {{site.name}}
                         </div>
                         <div class="inline field">
                             <label>Select Date: </label>
-                            <input type="date" id="datepicker">
+                            <input type="date" value="{{selectedDate}}" id="datepicker">
                         </div>
-                        <p>{{foundSite}}</p>
                     </div>
-                
-            
-        
    
     <div id="container-chart-O3" style="width: 100%"></div>
     <div id="container-chart-RMY_Wind" style="width: 100%"></div>
     <div id="container-chart-HMP60" style="width: 100%"></div>
-
+    <div id="container-chart-empty" style="width: 100%"></div>
 
     {{> editPoints}}
 </template>
 
+<!-- Modal for editing points -->
 <template name="editPoints">
     <div class="ui basic modal" id="editPointsModal">
         <i class="close icon"></i>
@@ -48,9 +45,6 @@
             </div>
 
             <div class="description">
-
-
-
                 <p>Flag will be changed for the follwoing selected Points:</p>
                 <ul>
                     {{#each points}} {{> point}} {{/each}}
