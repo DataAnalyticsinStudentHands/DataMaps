@@ -10,12 +10,10 @@
         </div>
     </div>
 
-    <div id="container-chart-empty" style="width: 100%"></div>
-    <div id="container-chart-O3" style="width: 100%"></div>
-    <div id="container-chart-RMY_Wind" style="width: 100%"></div>
-    <div id="container-chart-HMP60" style="width: 100%"></div>
-
-    {{> editPoints}}
+    <!-- container for charts -->
+    {{#each charts}}
+    <div id="container-chart-{{id}}" style="width: 100%"></div>
+    {{/each}} {{> editPoints}}
 </template>
 
 <!-- Modal for editing points -->
@@ -41,13 +39,21 @@
                     <div class="item" data-value="Q" data-text="Q">
                         <i class="square darkgreen icon"></i> Q (Span)
                     </div>
+                    <div class="item" data-value="N" data-text="N">
+                        <i class="square black icon"></i> N (Not representative)
+                    </div>
+                    <div class="item" data-value="P" data-text="P">
+                        <i class="square yellow icon"></i> P (Maintenance)
+                    </div>
                 </div>
             </div>
 
             <div class="description">
                 <p>Flag will be changed for the follwoing selected Points:</p>
                 <ul>
-                    {{#each points}} {{> point}} {{/each}}
+                    {{#each points}} 
+                    {{> point}}
+                    {{/each}}
                 </ul>
             </div>
         </div>
@@ -65,5 +71,5 @@
 </template>
 
 <template name="point">
-    <li>{{formatDate x}} {{Flag}}</li>
+    <li>{{formatDate x}} from {{Flag}} to {{flagSelected}}</li>
 </template>

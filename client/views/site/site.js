@@ -15,8 +15,13 @@ var EditPoints = new Mongo.Collection(null);
 var flagsHash = {
     0: 'black',
     K: 'red',
-    Q: 'darkgreen'
+    Q: 'darkgreen',
+    N: 'blue',
+    P: 'yellow' 
 };
+
+//placeholder for dynamic chart containers
+var Charts = new Meteor.Collection(null);   //This will store our synths
 
 /**
  * Custom selection handler that selects points and cancels the default zoom behaviour
@@ -48,7 +53,6 @@ function selectedPoints(e) {
     var points = [];
     _.each(e.points, function (point) {
         if (point.series.type === 'scatter') {
-            //console.log('point: ', point);
             var selectedPoint = {};
             //selectedPoint.id = point.category;
             selectedPoint.x = point.x;
@@ -58,7 +62,7 @@ function selectedPoints(e) {
         }
     });
 
-    console.log('Points: ', points);
+    EditPoints.remove({});
     for (var i = 0; i < points.length; i++) {
         EditPoints.insert(points[i]);
     }
@@ -75,7 +79,7 @@ function selectedPoints(e) {
         }
     }).modal('show');
 }
-var autoCounter = 1;
+
 
 /**
  * On click, unselect all points
@@ -89,40 +93,31 @@ function unselectByClick() {
     }
 }
 
+//checking autorun
+var autoCounter = 1;
+
 Template.site.onRendered(function () {
     Tracker.autorun(function () {
         //add notes to documents?
-        //need to figure out better use of Tracker
+        //need to figure out better management of Tracker.autorun - it runs too often
 
         autoCounter += 1;
         console.log('auto counter:', autoCounter);
         console.log('site: ', Router.current().params._id, 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
         Meteor.subscribe('dataSeries', Router.current().params._id, startEpoch.get(), endEpoch.get());
 
-        //destroy existing charts, should be dynamic
-        if ($('#container-chart-O3').highcharts()) {
-            $('#container-chart-O3').highcharts().destroy();
-        }
-
-        if ($('#container-chart-RMY_Wind').highcharts()) {
-            $('#container-chart-RMY_Wind').highcharts().destroy();
-        }
-
-        if ($('#container-chart-HMP60').highcharts()) {
-            $('#container-chart-HMP60').highcharts().destroy();
-        }
-
         var seriesOptions = {};
+        Charts.remove({});
 
         var allSeries = DataSeries.find({}).fetch();
         _.each(allSeries, function (data) {
-            console.log('data: ', data);
-            //Create data series for plotting
-            if (!seriesOptions[data.subType]) {
-                seriesOptions[data.subType] = [];
-            }
+            //Create individual data series for plotting
             _.each(data.datapoints, function (datapoints, i) {
-                seriesOptions[data.subType].push({
+                var seriesName = data.subType + '_' + i;
+                if (!seriesOptions[seriesName]) {
+                    seriesOptions[seriesName] = [];
+                }
+                seriesOptions[seriesName].push({
                     name: i + ' ' + data._id.split(/[_]+/).pop(),
                     type: data.chartType,
                     lineWidth: data.lineWidth,
@@ -135,11 +130,11 @@ Template.site.onRendered(function () {
 
                 });
             });
-
         });
 
-        _.each(seriesOptions, function (series, name) {
-            createCharts('container-chart-' + name, name, series);
+        _.each(seriesOptions, function (series, id) {            
+            Charts.insert({id:id});
+            createCharts('container-chart-' + id, id, series);
         });
 
         function createCharts(chartName, subType, seriesOptions) {
@@ -245,9 +240,16 @@ Template.site.onRendered(function () {
 }); //end of onRendered
 
 
+
 Template.editPoints.onRendered(function () {
     //Need to call dropdown render
-    this.$('.ui.dropdown').dropdown();
+    this.$('.ui.dropdown').dropdown({
+    //action: 'hide',
+    onChange: function(value, text, $selectedItem) {
+      console.log('hello: ', text);
+       
+    }
+  });
 });
 
 Template.editPoints.helpers({
@@ -256,9 +258,19 @@ Template.editPoints.helpers({
     }
 });
 
+
+
+var selectedFlag = new ReactiveVar('K');
+
+Template.point.helpers({
+    flagSelected: selectedFlag.get()
+});
+
 Template.editPoints.events({
-    'change select': function (event) {
+    'change #drop': function (event) {
+        
         console.log('hello: ', event.target.value);
+        selectedFlag.set(text);
     }
 });
 
@@ -272,7 +284,11 @@ Template.site.helpers({
             _id: Router.current().params._id
         });
     },
-    selectedDate: moment.unix(startEpoch.get()).format('YYYY-MM-DD')
+    selectedDate: moment.unix(startEpoch.get()).format('YYYY-MM-DD'),
+    charts: function() {
+        return Charts.find();  //This gives data to the html below
+    }
+
 });
 
 Template.site.events({

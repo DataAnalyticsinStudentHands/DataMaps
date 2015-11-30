@@ -197,9 +197,9 @@ var batchLiveDataUpsert = Meteor.bindEnvironment(function (parsedLines, path) {
             callback: function () {
 
                 var nowEpoch = moment().unix();
-                var agoEpoch = moment.unix(nowEpoch).subtract(200, 'minutes').unix();
+                var agoEpoch = moment.unix(nowEpoch).subtract(24, 'hours').unix();
 
-                logger.info('LiveData updated for : ', site.AQSID, 'Calling aggr for epochs: ', agoEpoch, '-', nowEpoch);
+                logger.info('LiveData updated for : ', site.AQSID, 'Calling aggr for epochs of the last 24 hours: ', agoEpoch, '-', nowEpoch);
                 perform5minAggregat(site.AQSID, agoEpoch, nowEpoch);
             }
         });
