@@ -79,7 +79,8 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                             chartType: 'scatter',
                             lineWidth: 0,
                             allowPointSelect: 'true',
-                            datapoints: poll5Data[pubKey]
+                            datapoints: poll5Data[pubKey],
+                            zIndex: 2
                         });
                     }
                 }
@@ -156,7 +157,8 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                         chartType: 'line',
                         lineWidth: 1,
                         allowPointSelect: 'false',
-                        datapoints: pollData[pubKey]
+                        datapoints: pollData[pubKey],
+                        zIndex: 1
                     });
                 }
             }

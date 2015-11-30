@@ -58,13 +58,22 @@ function selectedPoints(e) {
         }
     });
 
-
     console.log('Points: ', points);
     for (var i = 0; i < points.length; i++) {
         EditPoints.insert(points[i]);
     }
 
-    $('#editPointsModal').modal('show');
+    $('#editPointsModal').modal({
+        onDeny: function () {
+            console.log('canceled');
+        },
+        onApprove: function () {
+            _.each(points, function (point) {
+                point.newFlag = 'newFlag';
+            });
+            console.log('updated: ', points);
+        }
+    }).modal('show');
 }
 var autoCounter = 1;
 
@@ -102,7 +111,7 @@ Template.site.onRendered(function () {
         if ($('#container-chart-HMP60').highcharts()) {
             $('#container-chart-HMP60').highcharts().destroy();
         }
-    
+
         var seriesOptions = {};
 
         var allSeries = DataSeries.find({}).fetch();
@@ -118,39 +127,26 @@ Template.site.onRendered(function () {
                     type: data.chartType,
                     lineWidth: data.lineWidth,
                     allowPointSelect: data.allowPointSelect,
-                    data: datapoints
+                    data: datapoints,
+                    zIndex: data.zIndex,
+                    marker: {
+                        radius: 2
+                    }
 
                 });
             });
-           
+
         });
-        
-        console.log('seriesOptions: ', seriesOptions);
-        if (Object.keys(seriesOptions).length === 0) {
-            console.log('hello');
-            var emptySeries = [];
-            createCharts('container-chart-' + name, name, emptySeries);
-        }
-        
-        
+
         _.each(seriesOptions, function (series, name) {
             createCharts('container-chart-' + name, name, series);
         });
-        
+
         function createCharts(chartName, subType, seriesOptions) {
+
             $('#' + chartName).highcharts('StockChart', {
                 exporting: {
-                    chartOptions: { // specific options for the exported image
-                        plotOptions: {
-                            series: {
-                                dataLabels: {
-                                    enabled: true
-                                }
-                            }
-                        }
-                    },
-                    scale: 3,
-                    fallbackToExportServer: false
+                    enabled: true
                 },
                 chart: {
                     events: {
@@ -175,45 +171,33 @@ Template.site.onRendered(function () {
                     }
                 },
                 series: seriesOptions,
-                plotOptions: {
-                    series: {
-                        events: {
-                            mouseOut: function () {
-                                if (this.chart.lbl) {
-                                    this.chart.lbl.hide();
-                                }
-                            }
-                        },
-                        marker: {
-                            radius: 2
-                        },
-                        point: {
-                            events: {
-                                mouseOver: function () {
-                                    var chart = this.series.chart;
-                                    if (!chart.lbl) {
-                                        chart.lbl = chart.renderer.label('')
-                                            .attr({
-                                                padding: 10,
-                                                r: 10,
-                                                fill: Highcharts.getOptions().colors[2]
-                                            })
-                                            .css({
-                                                color: '#0f0e0e'
-                                            })
-                                            .add();
-                                    }
-                                    chart.lbl
-                                        .show()
-                                        .attr({
-                                            text: moment(this.x).format('YYYY/MM/DD HH:mm:ss') + ', ' + this.series.name + ' val: ' + this.y.toFixed(2)
-                                        });
-                                }
-                            }
-                        }
-                    }
-                },
                 tooltip: {
+                    enabled: true,
+                    crosshairs: [true],
+                    positioner: function (labelWidth, labelHeight, point) {
+                        var tooltipX, tooltipY;
+                        if (point.plotX + this.chart.plotLeft < labelWidth && point.plotY + labelHeight > this.chart.plotHeight) {
+                            tooltipX = this.chart.plotLeft;
+                            tooltipY = this.chart.plotTop + this.chart.plotHeight - 2 * labelHeight - 10;
+                        } else {
+                            tooltipX = this.chart.plotLeft;
+                            tooltipY = this.chart.plotTop + this.chart.plotHeight - labelHeight;
+                        }
+                        return {
+                            x: tooltipX,
+                            y: tooltipY
+                        };
+                    },
+                    formatter: function () {
+                        var s = moment(this.x).format('YYYY/MM/DD HH:mm:ss');
+                        s += '<br/>' + this.series.name + ' <b>' + this.y.toFixed(2) + '</b>';
+
+
+                        return s;
+                    },
+                    shared: false
+                },
+                credits: {
                     enabled: false
                 },
                 rangeSelector: {
@@ -272,13 +256,21 @@ Template.editPoints.helpers({
     }
 });
 
+Template.editPoints.events({
+    'change select': function (event) {
+        console.log('hello: ', event.target.value);
+    }
+});
+
 Template.registerHelper('formatDate', function (epoch) {
     return moment(epoch).format('YYYY/MM/DD HH:mm:ss');
 });
 
 Template.site.helpers({
     site: function () {
-        return Sites.findOne({_id: Router.current().params._id});
+        return Sites.findOne({
+            _id: Router.current().params._id
+        });
     },
     selectedDate: moment.unix(startEpoch.get()).format('YYYY-MM-DD')
 });
@@ -287,14 +279,5 @@ Template.site.events({
     'change #datepicker': function (event) {
         startEpoch.set(moment(event.target.value, 'YYYY-MM-DD').unix());
         endEpoch.set(moment.unix(startEpoch.get()).add(1, 'days').unix()); //always to current?
-    },
-    "click #export": function (e) {
-        console.log('event', e.target.value);
-        var chart = $('#container-chart-reactive').highcharts();
-        chart.exportChart({
-            type: 'application/pdf',
-            filename: 'my-pdf'
-        });
     }
-
 });

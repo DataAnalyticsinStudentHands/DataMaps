@@ -1,19 +1,19 @@
 <template name="site">
-            
-                    <div class="ui message">
-                        <div class="header">
-                            Site: {{site.name}}
-                        </div>
-                        <div class="inline field">
-                            <label>Select Date: </label>
-                            <input type="date" value="{{selectedDate}}" id="datepicker">
-                        </div>
-                    </div>
-   
+
+    <div class="ui message">
+        <div class="header">
+            Site: {{site.name}}
+        </div>
+        <div class="inline field">
+            <label>Select Date: </label>
+            <input type="date" value="{{selectedDate}}" id="datepicker">
+        </div>
+    </div>
+
+    <div id="container-chart-empty" style="width: 100%"></div>
     <div id="container-chart-O3" style="width: 100%"></div>
     <div id="container-chart-RMY_Wind" style="width: 100%"></div>
     <div id="container-chart-HMP60" style="width: 100%"></div>
-    <div id="container-chart-empty" style="width: 100%"></div>
 
     {{> editPoints}}
 </template>
@@ -53,10 +53,10 @@
         </div>
         <div class="actions">
             <div class="two fluid ui inverted buttons">
-                <div class="ui red basic inverted button">
+                <div class="ui deny red basic inverted button">
                     <i class="remove icon"></i> Cancel
                 </div>
-                <div class="ui green basic inverted button">
+                <div class="ui approve green basic inverted button">
                     <i class="checkmark icon"></i> Submit
                 </div>
             </div>

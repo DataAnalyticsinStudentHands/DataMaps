@@ -36,9 +36,9 @@ reactive-var
 reactive-dict
 bevanhunt:leaflet
 zimme:active-route
-jhuenges:highstock
 meteorhacks:kadira              # Remote performance watch
 makalu:better-dateinput-polyfill
 semantic:ui
 flemay:less-autoprefixer
 epaminond:nodemailer
+jhuenges:highstock
