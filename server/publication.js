@@ -1,7 +1,6 @@
 var flagColors = ['black', 'red', 'darkgreen'];
 
-
-//aggregation of data to be plotted with highstock
+//aggregation of live and aggregated data to be plotted with highstock
 Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
 
     var subscription = this;
@@ -152,9 +151,13 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
 
             for (var pubKey in pollData) {
                 if (pollData.hasOwnProperty(pubKey)) {
+                    var chartType = 'line';
+                    if (pubKey.indexOf('Wind') > -1) {
+                        chartType = 'scatter'
+                    }
                     subscription.added('dataSeries', pubKey + '_10s', {
                         subType: pubKey,
-                        chartType: 'line',
+                        chartType: chartType,
                         lineWidth: 1,
                         allowPointSelect: 'false',
                         datapoints: pollData[pubKey],
@@ -167,7 +170,95 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
         function (error) {
             Meteor._debug('error during livedata publication aggregation: ' + error);
         }
+    );
+});
 
+//aggregation of composite aggregated data to be plotted with highstock
+Meteor.publish('compositeSeries', function (siteList, startEpoch, endEpoch) {
+
+    var subscription = this;
+    var poll5Data = {};
+
+    var agg5Pipe = [
+        {
+            $match: {
+                $and: [{ site: { $in: siteList} },
+                    {
+                        epoch: {
+                            $gt: parseInt(startEpoch, 10),
+                            $lt: parseInt(endEpoch, 10)
+                        }
+                    }]
+            }
+        },
+        {
+            $limit: 5 //testingpubsub
+        },
+        {
+            $sort: {
+                epoch: 1
+            }
+        },
+        {
+            $group: {
+                _id: '$subTypes',
+//                series: {
+//                    $push: {
+//                        'subTypes': '$subTypes',
+//                        'epoch': '$epoch'
+//                    }
+//                }
+            }
+        }
+	];
+
+    AggrData.aggregate(agg5Pipe, function (err, result) {
+            //create new structure for data series to be used for charts
+            if (result.length > 0) {
+               // console.log('result: ', result);
+                
+                _.each(result, function (line) {
+                    console.log('line: ', line);
+                    var epoch = line.epoch;
+                    _.each(line.subTypes, function (subKey, subType) { //subType is O3, etc.              
+                        if (!poll5Data[subType]) {
+                            poll5Data[subType] = {};
+                        }
+                        _.each(subKey, function (sub, key) { //sub is the array with metric/val pairs as subarrays
+                            if (!poll5Data[subType][key]) { //create placeholder if not exists
+                                poll5Data[subType][key] = [];
+                            }
+
+                            if (key !== 'Flag') {
+                                var datapoint = {
+                                    x: epoch * 1000,
+                                    y: sub[1].val,
+                                    color: flagColors[sub[3].val]
+                                }; //milliseconds
+                                poll5Data[subType][key].push(datapoint);
+                            }
+                        });
+                    });
+                });
+
+                for (var pubKey in poll5Data) {
+                    if (poll5Data.hasOwnProperty(pubKey)) {
+                        subscription.added('dataSeries', pubKey + '_5m', {
+                            subType: pubKey,
+                            chartType: 'scatter',
+                            lineWidth: 0,
+                            allowPointSelect: 'true',
+                            datapoints: poll5Data[pubKey],
+                            zIndex: 2
+                        });
+                    }
+                }
+
+            }
+        },
+        function (error) {
+            Meteor._debug('error during 5min publication aggregation: ' + error);
+        }
     );
 });
 

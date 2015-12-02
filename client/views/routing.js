@@ -22,7 +22,6 @@ Router.route('/', {
         this.render();
     }
 });
-
 Router.route('site', {
     path: '/site/:_id',
     data: function () {
@@ -32,7 +31,13 @@ Router.route('site', {
     },
     template: 'site'
 });
-
+Router.route('/composite/', {
+    name: 'composite',
+    template: 'composite',
+    action: function () {
+        this.render();
+    }
+});
 Router.route('/admin/', {
     name: 'admin',
     template: 'admin',
@@ -47,9 +52,11 @@ Router.route('/testing/', {
         this.render();
     }
 });
+
 Router.plugin('ensureSignedIn', {
-    only: ['site', 'admin']
+    only: ['site', 'composite', 'admin']
 });
+
 //AccountsTemplates.configureRoute('changePwd');
 AccountsTemplates.configureRoute('enrollAccount');
 //AccountsTemplates.configureRoute('forgotPwd');
