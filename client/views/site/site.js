@@ -17,11 +17,11 @@ var flagsHash = {
     K: 'red',
     Q: 'darkgreen',
     N: 'blue',
-    P: 'yellow' 
+    P: 'yellow'
 };
 
 //placeholder for dynamic chart containers
-var Charts = new Meteor.Collection(null);   //This will store our synths
+var Charts = new Meteor.Collection(null); //This will store our synths
 
 /**
  * Custom selection handler that selects points and cancels the default zoom behaviour
@@ -130,10 +130,12 @@ Template.site.onRendered(function () {
                 });
             });
         });
-        
-        _.each(seriesOptions, function (series, id) {            
-            Charts.insert({id:id});
-            console.log('series: ', series, 'id: ', id);
+
+        _.each(seriesOptions, function (series, id) {
+            Charts.insert({
+                id: id
+            });
+            
             var yAxis = [{ // Primary yAxis
                 labels: {
                     format: '{value} mg/L',
@@ -147,23 +149,31 @@ Template.site.onRendered(function () {
                         color: Highcharts.getOptions().colors[0]
                     }
                 }
-            }]
-            if (series.length > 2 )
-                yAxis.push( { // Secondary yAxis
-                title: {
-                    text: series[2].name.split(/[ ]+/)[0],
-                    style: {
-                        color: Highcharts.getOptions().colors[1]
-                    }
-                },
-                labels: {
-                    format: '{value} C',
-                    style: {
-                        color: Highcharts.getOptions().colors[1]
-                    }
-                },
-                opposite: false
-            });
+            }];
+            if (series.length > 2) {
+                yAxis.push({ // Secondary yAxis
+                    title: {
+                        text: series[1].name.split(/[ ]+/)[0],
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    },
+                    labels: {
+                        format: '{value} C',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    },
+                    opposite: false
+                });
+            }
+            for (var i = 0; i < series.length; i++) {
+                var test = (i & 1) ? 1 : 2;
+                //console.log('for i =', i, ' the outcome is ', test);
+                series[i].yAxis = test ;
+                console.log('serises[i]: ', series[i]);
+            }
+            console.log('series: ', series, 'id: ', id);
             createCharts('container-chart-' + id, id, yAxis, series);
         });
 
@@ -270,12 +280,12 @@ Template.site.onRendered(function () {
 Template.editPoints.onRendered(function () {
     //Need to call dropdown render
     this.$('.ui.dropdown').dropdown({
-    //action: 'hide',
-    onChange: function(value, text, $selectedItem) {
-      console.log('hello: ', text);
-       
-    }
-  });
+        //action: 'hide',
+        onChange: function (value, text, $selectedItem) {
+            console.log('hello: ', text);
+
+        }
+    });
 });
 
 Template.editPoints.helpers({
@@ -292,7 +302,7 @@ Template.point.helpers({
 
 Template.editPoints.events({
     'change #drop': function (event) {
-        
+
         console.log('hello: ', event.target.value);
         selectedFlag.set(text);
     }
@@ -309,8 +319,8 @@ Template.site.helpers({
         });
     },
     selectedDate: moment.unix(startEpoch.get()).format('YYYY-MM-DD'),
-    charts: function() {
-        return Charts.find();  //This gives data to the html below
+    charts: function () {
+        return Charts.find(); //This gives data to the html below
     }
 
 });
