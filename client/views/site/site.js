@@ -135,7 +135,7 @@ Template.site.onRendered(function () {
             Charts.insert({
                 id: id
             });
-            
+            console.log('series: ', series);
             var yAxis = [{ // Primary yAxis
                 labels: {
                     format: '{value} mg/L',
@@ -150,6 +150,7 @@ Template.site.onRendered(function () {
                     }
                 }
             }];
+            
             if (series.length > 2) {
                 yAxis.push({ // Secondary yAxis
                     title: {
@@ -167,18 +168,18 @@ Template.site.onRendered(function () {
                     opposite: false
                 });
             }
+            
             for (var i = 0; i < series.length; i++) {
-                var test = (i & 1) ? 1 : 2;
+                var test = !(i & 1) ? 1 : 2;
                 //console.log('for i =', i, ' the outcome is ', test);
-                series[i].yAxis = test ;
-                console.log('serises[i]: ', series[i]);
+                //series[i].yAxis = test ;
             }
-            console.log('series: ', series, 'id: ', id);
+            
             createCharts('container-chart-' + id, id, yAxis, series);
         });
 
         function createCharts(chartName, subType, yAxis, seriesOptions) {
-
+            //console.log('seriesOptions: ', seriesOptions, 'yAxis: ', yAxis);
             $('#' + chartName).highcharts('StockChart', {
                 exporting: {
                     enabled: true
