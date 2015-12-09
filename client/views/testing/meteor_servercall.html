@@ -1,8 +1,3 @@
-<template name="simple">
-    <h1>Calling serve method</h1>
-    <input type="button" value="Call" />
-    <div id="simpleResult">{{result}}</div>
-</template>
 
 <template name="passData">
     <h1>Create 5 min Aggregate Data for</h1>
@@ -10,6 +5,8 @@
     <input type="text" value="482010572" />
     <span>Start Epoch: </span>
     <input id="start" type="text" value="" />
+    <input type="date" value="{{selectedStartDate}}" id="startdatepicker">
+    <input type="date" value="{{selectedEndDate}}" id="enddatepicker">
     <span>End Epoch: </span>
     <input id="end" type="text" value="" />
     <input id="passDataResult" type="button" value="Call" />

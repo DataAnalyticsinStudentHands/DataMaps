@@ -1,21 +1,19 @@
+var startEpoch = new ReactiveVar(moment().subtract(1, 'days').unix()); //24 hours ago - seconds
+var endEpoch = new ReactiveVar(moment().unix());
+
+
 //simple template to test server functions
-Template.simple.result = function () {
-    return Session.get('serverSimpleResponse') || '';
-};
-Template.simple.events = {
-    'click input': function () {
-        Meteor.call('getCurrentTime', function (err, response) {
-            Session.set('serverSimpleResponse', response);
-        });
-
-    }
-};
-
 Template.passData.result = function () {
     return Session.get('serverDataResponse') || '';
 };
 
 Template.passData.events = {
+    'change #startdatepicker': function (event) {
+        startEpoch.set(moment(event.target.value, 'YYYY-MM-DD').unix());
+    },
+    'change #enddatepicker': function (event) {
+        endEpoch.set(moment(event.target.value, 'YYYY-MM-DD').unix());
+    },
     'click #passDataResult': function () {
         Meteor.call('new5minAggreg', $('input[type=text]').val(), $('#start').val(), $('#end').val(), function (err, response) {
             if (err) {

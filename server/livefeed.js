@@ -54,7 +54,16 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                         for (var subType in subTypes[i]) {
                             if (subTypes[i].hasOwnProperty(subType)) {
                                 var data = subTypes[i][subType];
-                                if (data[0].val === 1) { //Flag should be valid
+                                
+                                //special calculation for wind data
+                                if (subType.contains('Wind')) {
+                                    console.log('data: ', data);
+                                } else {
+                                    
+                                }
+                                
+                                
+                                if (data[0].val === 1) { //Flag should be valid, we have to treat the other flags, too!
                                     for (var j = 1; j < data.length; j++) {
                                         var newkey = subType + '_' + data[j].metric;
                                         if (!aggrSubTypes[newkey]) {
