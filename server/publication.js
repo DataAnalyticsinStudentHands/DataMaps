@@ -152,8 +152,9 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
             for (var pubKey in pollData) {
                 if (pollData.hasOwnProperty(pubKey)) {
                     var chartType = 'line';
-                    if (pubKey.indexOf('Wind') > -1) {
-                        chartType = 'scatter'
+                    //wind data should never be shown as line
+                    if (pubKey.indexOf('Wind') >= 0) {
+                        chartType = 'scatter';
                     }
                     subscription.added('dataSeries', pubKey + '_10s', {
                         subType: pubKey,

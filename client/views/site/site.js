@@ -20,6 +20,14 @@ var flagsHash = {
     P: 'yellow'
 };
 
+var unitsHash = {
+    conc: 'pbbv',
+    Speed: 'miles/hour',
+    Direction: 'degree',
+    Temp: 'degree C',
+    RH: 'percent'
+};
+
 //placeholder for dynamic chart containers
 var Charts = new Meteor.Collection(null); //This will store our synths
 
@@ -28,14 +36,17 @@ var Charts = new Meteor.Collection(null); //This will store our synths
  */
 function selectPointsByDrag(e) {
 
-    // Select points
+    // Select points only for series where allowPointSelect
     Highcharts.each(this.series, function (series) {
-        Highcharts.each(series.points, function (point) {
-            if (point.x >= e.xAxis[0].min && point.x <= e.xAxis[0].max &&
-                point.y >= e.yAxis[0].min && point.y <= e.yAxis[0].max) {
-                point.select(true, true);
-            }
-        });
+        
+        if (series.options.allowPointSelect === 'true') {
+            Highcharts.each(series.points, function (point) {
+                if (point.x >= e.xAxis[0].min && point.x <= e.xAxis[0].max &&
+                    point.y >= e.yAxis[0].min && point.y <= e.yAxis[0].max) {
+                    point.select(true, true);
+                }
+            });
+        }
     });
 
     // Fire a custom event
@@ -117,17 +128,28 @@ Template.site.onRendered(function () {
                 seriesOptions[data.subType] = [];
             }
             _.each(data.datapoints, function (datapoints, i) {
-                seriesOptions[data.subType].push({
-                    name: i + ' ' + data._id.split(/[_]+/).pop(),
-                    type: data.chartType,
-                    lineWidth: data.lineWidth,
-                    allowPointSelect: data.allowPointSelect,
-                    data: datapoints,
-                    zIndex: data.zIndex,
-                    marker: {
-                        radius: 2
-                    }
-                });
+                if (data.chartType === 'line') {
+                    seriesOptions[data.subType].push({
+                        type: data.chartType,
+                        name: i + ' ' + data._id.split(/[_]+/).pop(),
+                        lineWidth: data.lineWidth,
+                        allowPointSelect: data.allowPointSelect,
+                        data: datapoints,
+                        zIndex: data.zIndex
+                    });
+                } else {
+                    seriesOptions[data.subType].push({
+                        type: data.chartType,
+                        name: i + ' ' + data._id.split(/[_]+/).pop(),
+                        marker: {
+                            enabled: true,
+                            radius: 2
+                        },
+                        allowPointSelect: data.allowPointSelect,
+                        data: datapoints,
+                        zIndex: data.zIndex
+                    });
+                }
             });
         });
 
@@ -135,10 +157,9 @@ Template.site.onRendered(function () {
             Charts.insert({
                 id: id
             });
-            console.log('series: ', series);
             var yAxis = [{ // Primary yAxis
                 labels: {
-                    format: '{value} mg/L',
+                    format: '{value} ' + unitsHash[series[0].name.split(/[ ]+/)[0]],
                     style: {
                         color: Highcharts.getOptions().colors[0]
                     }
@@ -150,7 +171,7 @@ Template.site.onRendered(function () {
                     }
                 }
             }];
-            
+
             if (series.length > 2) {
                 yAxis.push({ // Secondary yAxis
                     title: {
@@ -160,26 +181,22 @@ Template.site.onRendered(function () {
                         }
                     },
                     labels: {
-                        format: '{value} C',
+                        format: '{value} ' + unitsHash[series[1].name.split(/[ ]+/)[0]],
                         style: {
                             color: Highcharts.getOptions().colors[1]
                         }
                     },
                     opposite: false
                 });
+                for (var i = 0; i < series.length; i++) {
+                    //put axis for each series
+                    series[i].yAxis = !(i & 1) ? 0 : 1;
+                }
             }
-            
-            for (var i = 0; i < series.length; i++) {
-                var test = !(i & 1) ? 1 : 2;
-                //console.log('for i =', i, ' the outcome is ', test);
-                //series[i].yAxis = test ;
-            }
-            
             createCharts('container-chart-' + id, id, yAxis, series);
         });
 
         function createCharts(chartName, subType, yAxis, seriesOptions) {
-            //console.log('seriesOptions: ', seriesOptions, 'yAxis: ', yAxis);
             $('#' + chartName).highcharts('StockChart', {
                 exporting: {
                     enabled: true
@@ -276,8 +293,6 @@ Template.site.onRendered(function () {
     }); //end autorun
 }); //end of onRendered
 
-
-
 Template.editPoints.onRendered(function () {
     //Need to call dropdown render
     this.$('.ui.dropdown').dropdown({
@@ -305,7 +320,6 @@ Template.editPoints.events({
     'change #drop': function (event) {
 
         console.log('hello: ', event.target.value);
-        selectedFlag.set(text);
     }
 });
 

@@ -20,6 +20,9 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
             }
         },
         {
+            $limit: 5 //testing only!
+        },
+        {
             $project: {
                 epoch5min: 1,
                 epoch: 1,
@@ -54,28 +57,62 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                         for (var subType in subTypes[i]) {
                             if (subTypes[i].hasOwnProperty(subType)) {
                                 var data = subTypes[i][subType];
-                                
+                                var newkey;
                                 //special calculation for wind data
-                                if (subType.contains('Wind')) {
-                                    console.log('data: ', data);
-                                } else {
-                                    
-                                }
-                                
-                                
-                                if (data[0].val === 1) { //Flag should be valid, we have to treat the other flags, too!
+                                if (subType.indexOf('Wind') >= 0) {
+                                    //get windDir and windSpd
+                                    var windDir, windSpd;
                                     for (var j = 1; j < data.length; j++) {
-                                        var newkey = subType + '_' + data[j].metric;
+
+                                        if (data[j].metric === 'Direction') {
+                                            windDir = data[j].val;
+                                        }
+                                        if (data[j].metric === 'Speed') {
+                                            windSpd = data[j].val;
+                                        }
+
+                                    }
+                                    //Convert wind speed and wind direction waves into wind north and east component vectors
+                                    var windNord = Math.cos(windDir / 180 * Math.PI) * windSpd;
+                                    var windEast = Math.sin(windDir / 180 * Math.PI) * windSpd;
+
+                                    //Aggregate data points
+                                    newkey = subType + '_' + 'Wind';
+                                    if (!aggrSubTypes[newkey]) {
+                                        aggrSubTypes[newkey] = {
+                                            'sumWindNord': windNord,
+                                            'sumWindEast': windEast,
+                                            'avgWindNord': windNord,
+                                            'avgWindEast': windEast,
+                                            'numValid': parseInt(1, 10),
+                                            'Flag': 1
+                                        };
+                                    } else {
+                                        aggrSubTypes[newkey].numValid += 1;
+                                        aggrSubTypes[newkey].sumWindNord += windNord; //holds sum until end
+                                        aggrSubTypes[newkey].sumWindEast += windEast;
+                                        aggrSubTypes[newkey].avgWindNord = aggrSubTypes[newkey].sumWindNord / aggrSubTypes[newkey].numValid;
+                                        aggrSubTypes[newkey].avgWindEast = aggrSubTypes[newkey].sumWindEast / aggrSubTypes[newkey].numValid;
+
+                                    }
+                                    if ((aggrSubTypes[newkey].numValid / i) < 0.75) {
+                                        aggrSubTypes[newkey].Flag = 0; //should discuss how to use
+                                    }
+                                }
+                                //normal aggreagation for all other subTypes
+                                else {
+                                    for (var k = 1; k < data.length; k++) {
+                                        newkey = subType + '_' + data[k].metric;
                                         if (!aggrSubTypes[newkey]) {
                                             aggrSubTypes[newkey] = {
-                                                'sum': data[j].val,
-                                                'avg': data[j].val,
+                                                'sum': data[k].val,
+                                                'avg': data[k].val,
                                                 'numValid': parseInt(1, 10),
                                                 'Flag': 1
                                             };
                                         } else {
                                             aggrSubTypes[newkey].numValid += 1;
-                                            aggrSubTypes[newkey].sum += data[j].val; //holds sum until end
+                                            aggrSubTypes[newkey].sum += data[k].val; //holds sum until end
                                             aggrSubTypes[newkey].avg = aggrSubTypes[newkey].sum / aggrSubTypes[newkey].numValid;
 
                                         }
@@ -97,31 +134,78 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                             if (!newaggr[instrument]) {
                                 newaggr[instrument] = {};
                             }
-                            if (!newaggr[instrument][measurement]) {
-                                newaggr[instrument][measurement] = [];
-                            }
+
                             var obj = aggrSubTypes[aggr];
 
-                            newaggr[instrument][measurement].push({
-                                metric: 'sum',
-                                val: obj.sum
-                            });
-                            newaggr[instrument][measurement].push({
-                                metric: 'avg',
-                                val: obj.avg
-                            });
-                            newaggr[instrument][measurement].push({
-                                metric: 'numValid',
-                                val: obj.numValid
-                            });
-                            newaggr[instrument][measurement].push({
-                                metric: 'Flag',
-                                val: obj.Flag
-                            });
+                            if (measurement === 'Wind') { //special treatment for wind measurements 
+                                if (!newaggr[instrument].Direction) {
+                                    newaggr[instrument].Direction = [];
+                                }
+                                if (!newaggr[instrument].Speed) {
+                                    newaggr[instrument].Speed = [];
+                                }
+                                var windDirAvg = (Math.atan2(obj.avgWindEast, obj.avgWindNord) / Math.PI * 180 + 360) % 360;
+                                var windSpdAvg = Math.sqrt((obj.avgWindNord * obj.avgWindNord) + (obj.avgWindEast * obj.avgWindEast));
+
+                                newaggr[instrument].Direction.push({
+                                    metric: 'sum',
+                                    val: 'Nan'
+                                });
+                                newaggr[instrument].Direction.push({
+                                    metric: 'avg',
+                                    val: windDirAvg
+                                });
+                                newaggr[instrument].Direction.push({
+                                    metric: 'numValid',
+                                    val: obj.numValid
+                                });
+                                newaggr[instrument].Direction.push({
+                                    metric: 'Flag',
+                                    val: obj.Flag
+                                });
+                                
+                                newaggr[instrument].Speed.push({
+                                    metric: 'sum',
+                                    val: 'Nan'
+                                });
+                                newaggr[instrument].Speed.push({
+                                    metric: 'avg',
+                                    val: windSpdAvg
+                                });
+                                newaggr[instrument].Speed.push({
+                                    metric: 'numValid',
+                                    val: obj.numValid
+                                });
+                                newaggr[instrument].Speed.push({
+                                    metric: 'Flag',
+                                    val: obj.Flag
+                                });
+                            } else { //all other measurements
+                                if (!newaggr[instrument][measurement]) {
+                                    newaggr[instrument][measurement] = [];
+                                }
+                                newaggr[instrument][measurement].push({
+                                    metric: 'sum',
+                                    val: obj.sum
+                                });
+                                newaggr[instrument][measurement].push({
+                                    metric: 'avg',
+                                    val: obj.avg
+                                });
+                                newaggr[instrument][measurement].push({
+                                    metric: 'numValid',
+                                    val: obj.numValid
+                                });
+                                newaggr[instrument][measurement].push({
+                                    metric: 'Flag',
+                                    val: obj.Flag
+                                });
+                            }
                         }
                     }
 
                     subObj.subTypes = newaggr;
+                    console.log('newaggr: ', JSON.stringify(newaggr));
                     AggrData.update({
                             _id: subObj._id
                         },

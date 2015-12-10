@@ -7,8 +7,26 @@ Template.passData.result = function () {
     return Session.get('serverDataResponse') || '';
 };
 
+Template.passData.helpers({
+
+    selectedStartDate: function () {
+        return moment.unix(startEpoch.get()).format('YYYY-MM-DD');
+    },
+    selectedEndDate: function () {
+        return moment.unix(endEpoch.get()).format('YYYY-MM-DD');
+    },
+    startEpoch: function () {
+        return startEpoch.get();
+    },
+    endEpoch: function () {
+        return endEpoch.get();
+    }
+
+});
+
 Template.passData.events = {
     'change #startdatepicker': function (event) {
+        console.log('hello');
         startEpoch.set(moment(event.target.value, 'YYYY-MM-DD').unix());
     },
     'change #enddatepicker': function (event) {
@@ -31,5 +49,5 @@ Template.passData.events = {
             }
             Session.set('serverExportDataResponse', response);
         });
-    }  
+    }
 };
