@@ -38,7 +38,6 @@ function selectPointsByDrag(e) {
 
     // Select points only for series where allowPointSelect
     Highcharts.each(this.series, function (series) {
-        
         if (series.options.allowPointSelect === 'true') {
             Highcharts.each(series.points, function (point) {
                 if (point.x >= e.xAxis[0].min && point.x <= e.xAxis[0].max &&
@@ -127,6 +126,7 @@ Template.site.onRendered(function () {
             if (!seriesOptions[data.subType]) {
                 seriesOptions[data.subType] = [];
             }
+            console.log('data: ', data);
             _.each(data.datapoints, function (datapoints, i) {
                 if (data.chartType === 'line') {
                     seriesOptions[data.subType].push({
@@ -333,7 +333,9 @@ Template.site.helpers({
             _id: Router.current().params._id
         });
     },
-    selectedDate: moment.unix(startEpoch.get()).format('YYYY-MM-DD'),
+    selectedDate: function() {
+        return moment.unix(endEpoch.get()).format('YYYY-MM-DD');
+    },
     charts: function () {
         return Charts.find(); //This gives data to the html below
     }

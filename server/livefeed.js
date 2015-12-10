@@ -4,24 +4,24 @@ var csvmodule = Meteor.npmRequire('csv');
 var fs = Meteor.npmRequire('fs');
 var logger = Meteor.npmRequire('winston'); // this retrieves default logger which was configured in server.js
 
-var perform5minAggregat = function (siteId, startTime, endTime) {
+var perform5minAggregat = function (siteId, startEpoch, endEpoch) {
 
     var pipeline = [
         {
             $match: {
                 $and: [{
                     epoch: {
-                        $gt: parseInt(startTime, 10),
-                        $lt: parseInt(endTime, 10)
+                        $gt: parseInt(startEpoch, 10),
+                        $lt: parseInt(endEpoch, 10)
                     }
                 }, {
                     site: siteId
                 }]
             }
         },
-        {
-            $limit: 5 //testing only!
-        },
+//        {
+//            $limit: 5 //testing only!
+//        },
         {
             $project: {
                 epoch5min: 1,
@@ -58,12 +58,18 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                             if (subTypes[i].hasOwnProperty(subType)) {
                                 var data = subTypes[i][subType];
                                 var newkey;
+                                var numValid = 1;
+                                if (data[0].val !== 1) { //if flag is not 1 (valid) don't increase numValid
+                                    numValid = 0;
+                                }
                                 //special calculation for wind data
                                 if (subType.indexOf('Wind') >= 0) {
                                     //get windDir and windSpd
                                     var windDir, windSpd;
                                     for (var j = 1; j < data.length; j++) {
-
+                                        if (data[j].val === '') {
+                                            numValid = 0;
+                                        }
                                         if (data[j].metric === 'Direction') {
                                             windDir = data[j].val;
                                         }
@@ -84,16 +90,17 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                                             'sumWindEast': windEast,
                                             'avgWindNord': windNord,
                                             'avgWindEast': windEast,
-                                            'numValid': parseInt(1, 10),
+                                            'numValid': numValid,
                                             'Flag': 1
                                         };
                                     } else {
-                                        aggrSubTypes[newkey].numValid += 1;
+                                        aggrSubTypes[newkey].numValid += numValid;
                                         aggrSubTypes[newkey].sumWindNord += windNord; //holds sum until end
                                         aggrSubTypes[newkey].sumWindEast += windEast;
-                                        aggrSubTypes[newkey].avgWindNord = aggrSubTypes[newkey].sumWindNord / aggrSubTypes[newkey].numValid;
-                                        aggrSubTypes[newkey].avgWindEast = aggrSubTypes[newkey].sumWindEast / aggrSubTypes[newkey].numValid;
-
+                                        if (aggrSubTypes[newkey].numValid !== 0) {
+                                            aggrSubTypes[newkey].avgWindNord = aggrSubTypes[newkey].sumWindNord / aggrSubTypes[newkey].numValid;
+                                            aggrSubTypes[newkey].avgWindEast = aggrSubTypes[newkey].sumWindEast / aggrSubTypes[newkey].numValid;
+                                        }
                                     }
                                     if ((aggrSubTypes[newkey].numValid / i) < 0.75) {
                                         aggrSubTypes[newkey].Flag = 0; //should discuss how to use
@@ -102,18 +109,26 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                                 //normal aggreagation for all other subTypes
                                 else {
                                     for (var k = 1; k < data.length; k++) {
+                                        numValid = 1;
+                                        if (data[k].val === '') {
+                                            numValid = 0;
+                                        }
                                         newkey = subType + '_' + data[k].metric;
                                         if (!aggrSubTypes[newkey]) {
                                             aggrSubTypes[newkey] = {
                                                 'sum': data[k].val,
                                                 'avg': data[k].val,
-                                                'numValid': parseInt(1, 10),
+                                                'numValid': numValid,
                                                 'Flag': 1
                                             };
                                         } else {
-                                            aggrSubTypes[newkey].numValid += 1;
-                                            aggrSubTypes[newkey].sum += data[k].val; //holds sum until end
-                                            aggrSubTypes[newkey].avg = aggrSubTypes[newkey].sum / aggrSubTypes[newkey].numValid;
+                                            aggrSubTypes[newkey].numValid += numValid;
+                                            if (data[k].val !== '') {
+                                                aggrSubTypes[newkey].sum += data[k].val; //holds sum until end
+                                            }
+                                            if (aggrSubTypes[newkey].numValid !== 0) {
+                                                aggrSubTypes[newkey].avg = aggrSubTypes[newkey].sum / aggrSubTypes[newkey].numValid;
+                                            }
 
                                         }
                                         if ((aggrSubTypes[newkey].numValid / i) < 0.75) {
@@ -163,7 +178,7 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                                     metric: 'Flag',
                                     val: obj.Flag
                                 });
-                                
+
                                 newaggr[instrument].Speed.push({
                                     metric: 'sum',
                                     val: 'Nan'
@@ -205,16 +220,13 @@ var perform5minAggregat = function (siteId, startTime, endTime) {
                     }
 
                     subObj.subTypes = newaggr;
-                    console.log('newaggr: ', JSON.stringify(newaggr));
                     AggrData.update({
                             _id: subObj._id
                         },
                         subObj, {
                             upsert: true
                         });
-
                 });
-
             },
             function (error) {
                 Meteor._debug('error during aggregation: ' + error);
@@ -316,9 +328,9 @@ var readFile = Meteor.bindEnvironment(function (path) {
 });
 
 Meteor.methods({
-    new5minAggreg: function (siteId, startTime, endTime) {
-        logger.info('Helper called 5minAgg for site: ', siteId, ' start: ', startTime, ' end: ', endTime);
-        perform5minAggregat(siteId, startTime, endTime);
+    new5minAggreg: function (siteId, startEpoch, endEpoch) {
+        logger.info('Helper called 5minAgg for site: ', siteId, ' start: ', startEpoch, ' end: ', endEpoch);
+        perform5minAggregat(siteId, startEpoch, endEpoch);
     }
 });
 

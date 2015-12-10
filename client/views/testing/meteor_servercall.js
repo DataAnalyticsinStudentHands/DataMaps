@@ -26,7 +26,6 @@ Template.passData.helpers({
 
 Template.passData.events = {
     'change #startdatepicker': function (event) {
-        console.log('hello');
         startEpoch.set(moment(event.target.value, 'YYYY-MM-DD').unix());
     },
     'change #enddatepicker': function (event) {

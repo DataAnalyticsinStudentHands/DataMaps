@@ -45,6 +45,7 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
 
     AggrData.aggregate(agg5Pipe, function (err, result) {
             //create new structure for data series to be used for charts
+            console.log('result: ', result);
             if (result.length > 0) {
                 var lines = result[0].series;
                 _.each(lines, function (line) {
