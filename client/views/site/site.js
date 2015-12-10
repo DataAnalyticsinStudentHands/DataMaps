@@ -1,5 +1,6 @@
 var startEpoch = new ReactiveVar(moment().subtract(1, 'days').unix()); //24 hours ago - seconds
 var endEpoch = new ReactiveVar(moment().unix());
+var selectedFlag = new ReactiveVar('K');
 
 Meteor.subscribe('sites');
 
@@ -76,6 +77,8 @@ function selectedPoints(e) {
     for (var i = 0; i < points.length; i++) {
         EditPoints.insert(points[i]);
     }
+    
+    selectedFlag.set('K');
 
     $('#editPointsModal').modal({
         onDeny: function () {
@@ -298,8 +301,7 @@ Template.editPoints.onRendered(function () {
     this.$('.ui.dropdown').dropdown({
         //action: 'hide',
         onChange: function (value, text, $selectedItem) {
-            console.log('hello: ', text);
-
+            selectedFlag.set(text);
         }
     });
 });
@@ -310,16 +312,9 @@ Template.editPoints.helpers({
     }
 });
 
-var selectedFlag = new ReactiveVar('K');
-
 Template.point.helpers({
-    flagSelected: selectedFlag.get()
-});
-
-Template.editPoints.events({
-    'change #drop': function (event) {
-
-        console.log('hello: ', event.target.value);
+    flagSelected: function() {
+        return selectedFlag.get();
     }
 });
 
@@ -339,7 +334,6 @@ Template.site.helpers({
     charts: function () {
         return Charts.find(); //This gives data to the html below
     }
-
 });
 
 Template.site.events({

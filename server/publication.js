@@ -45,11 +45,9 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
 
     AggrData.aggregate(agg5Pipe, function (err, result) {
             //create new structure for data series to be used for charts
-            console.log('result: ', result);
             if (result.length > 0) {
                 var lines = result[0].series;
                 _.each(lines, function (line) {
-                    //console.log('line: ', line);
                     var epoch = line.epoch;
                     _.each(line.subTypes, function (subKey, subType) { //subType is O3, etc.              
                         if (!poll5Data[subType]) {
@@ -216,11 +214,8 @@ Meteor.publish('compositeSeries', function (siteList, startEpoch, endEpoch) {
 
     AggrData.aggregate(agg5Pipe, function (err, result) {
             //create new structure for data series to be used for charts
-            if (result.length > 0) {
-               // console.log('result: ', result);
-                
+            if (result.length > 0) {                
                 _.each(result, function (line) {
-                    console.log('line: ', line);
                     var epoch = line.epoch;
                     _.each(line.subTypes, function (subKey, subType) { //subType is O3, etc.              
                         if (!poll5Data[subType]) {
