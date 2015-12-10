@@ -13,12 +13,13 @@ Highcharts.setOptions({
 //pass null as collection name, it will create
 //local only collection
 var EditPoints = new Mongo.Collection(null);
+
 var flagsHash = {
-    0: 'black',
+    0: 'white',
     K: 'red',
-    Q: 'darkgreen',
-    N: 'blue',
-    P: 'yellow'
+    Q: 'orange',
+    P: 'grey',
+    N: 'black'
 };
 
 var unitsHash = {
@@ -62,13 +63,17 @@ function selectPointsByDrag(e) {
  */
 function selectedPoints(e) {
     var points = [];
+
     _.each(e.points, function (point) {
+        console.log('point.series.chart.title.textStr: ', point.series.chart.title.textStr);
         if (point.series.type === 'scatter') {
             var selectedPoint = {};
             //selectedPoint.id = point.category;
             selectedPoint.x = point.x;
             selectedPoint.y = point.y;
             selectedPoint.Flag = (_.invert(flagsHash))[point.color];
+            selectedPoint._id = Router.current().params._id;
+            selectedPoint.instrument = point.series.chart.title.textStr;
             points.push(selectedPoint);
         }
     });
@@ -77,7 +82,7 @@ function selectedPoints(e) {
     for (var i = 0; i < points.length; i++) {
         EditPoints.insert(points[i]);
     }
-    
+
     selectedFlag.set('K');
 
     $('#editPointsModal').modal({
@@ -85,10 +90,19 @@ function selectedPoints(e) {
             console.log('canceled');
         },
         onApprove: function () {
-            _.each(points, function (point) {
-                point.newFlag = 'newFlag';
+            //update the edited points with the selected flag
+            EditPoints.update({}, {
+                $set: {
+                    'newFlag': selectedFlag.get()
+                }
             });
-            console.log('updated: ', points);
+            
+            var updatedPoints = EditPoints.find({});
+            //send updates to server
+            updatedPoints.forEach(function (point) {
+                console.log('updated: ', point.newFlag);
+                Meteor.call('insertUpdateFlag', point._id, point.x, point.instrument, point.newFlag);
+            });                         
         }
     }).modal('show');
 }
@@ -119,6 +133,8 @@ Template.site.onRendered(function () {
         console.log('site: ', Router.current().params._id, 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
         Meteor.subscribe('dataSeries', Router.current().params._id, startEpoch.get(), endEpoch.get());
 
+
+
         var seriesOptions = {};
         Charts.remove({});
 
@@ -129,7 +145,7 @@ Template.site.onRendered(function () {
             if (!seriesOptions[data.subType]) {
                 seriesOptions[data.subType] = [];
             }
-            console.log('data: ', data);
+            //console.log('data: ', data);
             _.each(data.datapoints, function (datapoints, i) {
                 if (data.chartType === 'line') {
                     seriesOptions[data.subType].push({
@@ -313,7 +329,7 @@ Template.editPoints.helpers({
 });
 
 Template.point.helpers({
-    flagSelected: function() {
+    flagSelected: function () {
         return selectedFlag.get();
     }
 });
@@ -328,7 +344,7 @@ Template.site.helpers({
             _id: Router.current().params._id
         });
     },
-    selectedDate: function() {
+    selectedDate: function () {
         return moment.unix(endEpoch.get()).format('YYYY-MM-DD');
     },
     charts: function () {

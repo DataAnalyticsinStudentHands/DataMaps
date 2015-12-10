@@ -331,6 +331,15 @@ Meteor.methods({
     new5minAggreg: function (siteId, startEpoch, endEpoch) {
         logger.info('Helper called 5minAgg for site: ', siteId, ' start: ', startEpoch, ' end: ', endEpoch);
         perform5minAggregat(siteId, startEpoch, endEpoch);
+    },
+    insertUpdateFlag: function (siteId, epoch, instrument, flag) {
+        
+        var id = siteId + '_' + epoch/1000; //seconds
+        var updateStr = 'subTypes.' + instrument + 'conc.3.val';
+        //var updateQuery = {subTypes[instrument].conc.3.val: flag};
+        console.log('updateStr: ', updateStr);
+        AggrData.update({_id: id}, {$set: {'subTypes.O3.conc.3.val': flag}});
+        
     }
 });
 

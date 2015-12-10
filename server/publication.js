@@ -1,4 +1,4 @@
-var flagColors = ['black', 'red', 'darkgreen'];
+var flagColors = ['white', 'red', 'orange', 'orange', 'orange', 'orange', 'white', 'white', 'grey', 'black'];
 
 //aggregation of live and aggregated data to be plotted with highstock
 Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {

@@ -3,12 +3,10 @@ var endEpoch = new ReactiveVar(moment().unix());
 
 
 //simple template to test server functions
-Template.passData.result = function () {
-    return Session.get('serverDataResponse') || '';
-};
-
 Template.passData.helpers({
-
+    result: function () {
+        return Session.get('serverDataResponse') || '';
+    },
     selectedStartDate: function () {
         return moment.unix(startEpoch.get()).format('YYYY-MM-DD');
     },
@@ -47,6 +45,15 @@ Template.passData.events = {
                 return;
             }
             Session.set('serverExportDataResponse', response);
+        });
+    },
+    'click #updateFlag': function () {
+        Meteor.call('updateFlag', $('#site').val(), $('#epoch').val(), $('#flag').val(), function (err, response) {
+            if (err) {
+                Session.set('serverUpdateFlagResponse', 'Error:' + err.reason);
+                return;
+            }
+            Session.set('serverUpdateFlagDataResponse', response);
         });
     }
 };
