@@ -338,7 +338,9 @@ Meteor.methods({
         var updateStr = 'subTypes.' + instrument + 'conc.3.val';
         //var updateQuery = {subTypes[instrument].conc.3.val: flag};
         console.log('updateStr: ', updateStr);
-        AggrData.update({_id: id}, {$set: {'subTypes.O3.conc.3.val': flag}});
+        AggrData.update({_id: id}, {$push: {'subTypes.O3.conc': {val: flag}}});
+                       
+                       
         
     }
 });

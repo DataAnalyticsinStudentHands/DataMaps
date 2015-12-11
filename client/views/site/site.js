@@ -100,7 +100,7 @@ function selectedPoints(e) {
             var updatedPoints = EditPoints.find({});
             //send updates to server
             updatedPoints.forEach(function (point) {
-                console.log('updated: ', point.newFlag);
+                console.log('updating epoch: ', point.x);
                 Meteor.call('insertUpdateFlag', point._id, point.x, point.instrument, point.newFlag);
             });                         
         }
