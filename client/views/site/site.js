@@ -1,6 +1,7 @@
 var startEpoch = new ReactiveVar(moment().subtract(1, 'days').unix()); //24 hours ago - seconds
 var endEpoch = new ReactiveVar(moment().unix());
 var selectedFlag = new ReactiveVar(1);
+var trigger = new ReactiveVar('on');
 
 Meteor.subscribe('sites');
 
@@ -124,28 +125,24 @@ function selectedPoints(e) {
     for (var i = 0; i < points.length; i++) {
         EditPoints.insert(points[i]);
     }
-
-    selectedFlag.set('K');
+    
+    $('.ui.dropdown').dropdown('clear');
 
     $('#editPointsModal').modal({
         onDeny: function () {
-            console.log('canceled');
+            //do nothing
         },
         onApprove: function () {
-            //update the edited points with the selected flag
-            var newFlagVal = selectedFlag.get();
-            console.log('newFlagVal: ', newFlagVal);
-            EditPoints.update({}, {
-                $set: {
-                    'newFlag': newFlagVal
-                }
-            });
-
+            //update the edited points with the selected flag on the server
+            var newFlagVal = flagsHash[selectedFlag.get()].val;
             var updatedPoints = EditPoints.find({});
-            //send updates to server
             updatedPoints.forEach(function (point) {
-                Meteor.call('insertUpdateFlag', point.site, point.x, point.instrument, point.measurement, point.newFlag);
+                Meteor.call('insertUpdateFlag', point.site, point.x, point.instrument, point.measurement, newFlagVal);
             });
+            
+            trigger.set(Math.random().toString(36).substring(7));
+                
+                     
         }
     }).modal('show');
 }
@@ -175,6 +172,8 @@ Template.site.onRendered(function () {
         console.log('auto counter:', autoCounter);
         console.log('site: ', Router.current().params._id, 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
         Meteor.subscribe('dataSeries', Router.current().params._id, startEpoch.get(), endEpoch.get());
+        
+        trigger.get();
 
         var seriesOptions = {};
         Charts.remove({});
@@ -371,7 +370,7 @@ Template.editPoints.helpers({
 
 Template.point.helpers({
     flagSelected: function () {
-        return selectedFlag.get();
+        return flagsHash[selectedFlag.get()];
     }
 });
 

@@ -59,6 +59,7 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                             }
 
                             if (key.indexOf('Flag') < 0) { //get all measurements
+                                console.log('key: ', key);
                                 var datapoint = {
                                     x: epoch * 1000,
                                     y: sub[1].val,

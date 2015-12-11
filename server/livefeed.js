@@ -345,7 +345,6 @@ Meteor.methods({
         qry.$push[insertField].metric = 'Overwrite Flag';
         qry.$push[insertField].user = 'peggy';
         qry.$push[insertField].note = 'test';
-        console.log('query: ', qry);
         AggrData.update({_id: id}, qry);
                        
         
