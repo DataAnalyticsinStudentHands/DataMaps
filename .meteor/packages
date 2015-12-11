@@ -13,9 +13,7 @@ momentjs:moment                 # Time calculations
 udondan:bulk-collection-update  # Collection bulk update
 useraccounts:iron-routing
 useraccounts:semantic-ui
-aldeed:collection2
 alanning:roles
-dburles:collection-helpers
 fortawesome:fontawesome
 standard-minifiers              # JS/CSS minifiers run for production mode
 meteor-base                     # Packages every Meteor app needs to have
@@ -35,10 +33,9 @@ meteorhacks:aggregate           # MongoDB Aggregation
 reactive-var
 reactive-dict
 bevanhunt:leaflet
-zimme:active-route
 meteorhacks:kadira              # Remote performance watch
-makalu:better-dateinput-polyfill
+makalu:better-dateinput-polyfill # Date picker
 semantic:ui
 flemay:less-autoprefixer
 epaminond:nodemailer
-jhuenges:highstock
+jhuenges:highstock              #Charts

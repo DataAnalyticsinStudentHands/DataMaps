@@ -57,7 +57,7 @@ Meteor.setInterval(function () {
         }
         if (moment() - lastPeriodicReportTime >= 30 * 60 * 1000) {
             logger.info(periodicReportString);
-            //sendEmail('Site\'s periodic report', periodicReportString);
+            sendEmail('Site\'s periodic report', periodicReportString);
             lastPeriodicReportTime = moment();
         }
     
