@@ -1,6 +1,6 @@
 var startEpoch = new ReactiveVar(moment().subtract(1, 'days').unix()); //24 hours ago - seconds
 var endEpoch = new ReactiveVar(moment().unix());
-var selectedFlag = new ReactiveVar('K');
+var selectedFlag = new ReactiveVar(1);
 
 Meteor.subscribe('sites');
 
@@ -15,11 +15,54 @@ Highcharts.setOptions({
 var EditPoints = new Mongo.Collection(null);
 
 var flagsHash = {
-    0: 'white',
-    K: 'red',
-    Q: 'orange',
-    P: 'grey',
-    N: 'black'
+    0: {
+        val: 0,
+        description: 'zero',
+        label: 'Q',
+        color: 'white'
+    },
+    1: {
+        val: 1,
+        description: 'valid',
+        label: 'K',
+        color: 'red'
+    },
+    2: {
+        val: 2,
+        description: 'span',
+        label: 'Q',
+        color: 'orange'
+    },
+    3: {
+        val: 3,
+        description: 'span',
+        label: 'Q',
+        color: 'orange'
+    },
+    4: {
+        val: 4,
+        description: 'span',
+        label: 'Q',
+        color: 'orange'
+    },
+    5: {
+        val: 5,
+        description: 'span',
+        label: 'Q',
+        color: 'orange'
+    },
+    8: {
+        val: 8,
+        description: 'maintenance',
+        label: 'P',
+        color: 'grey'
+    },
+    9: {
+        val: 9,
+        description: 'offline',
+        label: 'N',
+        color: 'black'
+    }
 };
 
 var unitsHash = {
@@ -65,15 +108,14 @@ function selectedPoints(e) {
     var points = [];
 
     _.each(e.points, function (point) {
-        console.log('point.series.chart.title.textStr: ', point.series.chart.title.textStr);
         if (point.series.type === 'scatter') {
             var selectedPoint = {};
-            //selectedPoint.id = point.category;
             selectedPoint.x = point.x;
             selectedPoint.y = point.y;
-            selectedPoint.Flag = (_.invert(flagsHash))[point.color];
-            selectedPoint._id = Router.current().params._id;
+            selectedPoint.flag = flagsHash[point.name];
+            selectedPoint.site = Router.current().params._id;
             selectedPoint.instrument = point.series.chart.title.textStr;
+            selectedPoint.measurement = point.series.name;
             points.push(selectedPoint);
         }
     });
@@ -91,18 +133,19 @@ function selectedPoints(e) {
         },
         onApprove: function () {
             //update the edited points with the selected flag
+            var newFlagVal = selectedFlag.get();
+            console.log('newFlagVal: ', newFlagVal);
             EditPoints.update({}, {
                 $set: {
-                    'newFlag': selectedFlag.get()
+                    'newFlag': newFlagVal
                 }
             });
-            
+
             var updatedPoints = EditPoints.find({});
             //send updates to server
             updatedPoints.forEach(function (point) {
-                console.log('updating epoch: ', point.x);
-                Meteor.call('insertUpdateFlag', point._id, point.x, point.instrument, point.newFlag);
-            });                         
+                Meteor.call('insertUpdateFlag', point.site, point.x, point.instrument, point.measurement, point.newFlag);
+            });
         }
     }).modal('show');
 }
@@ -132,8 +175,6 @@ Template.site.onRendered(function () {
         console.log('auto counter:', autoCounter);
         console.log('site: ', Router.current().params._id, 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
         Meteor.subscribe('dataSeries', Router.current().params._id, startEpoch.get(), endEpoch.get());
-
-
 
         var seriesOptions = {};
         Charts.remove({});
@@ -315,9 +356,9 @@ Template.site.onRendered(function () {
 Template.editPoints.onRendered(function () {
     //Need to call dropdown render
     this.$('.ui.dropdown').dropdown({
-        //action: 'hide',
-        onChange: function (value, text, $selectedItem) {
-            selectedFlag.set(text);
+        //onChange: function (value, text, $selectedItem) {
+        onChange: function (value) {
+            selectedFlag.set(value);
         }
     });
 });

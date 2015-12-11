@@ -13,6 +13,7 @@
     <!-- container for charts -->
     {{#each charts}}
     <div id="container-chart-{{id}}" style="width: 100%"></div>
+    <!-- placeholder for editPoints modal -->
     {{/each}} {{> editPoints}}
 </template>
 
@@ -30,28 +31,26 @@
                 <i class="dropdown icon"></i>
                 <div class="default text">Select one ...</div>
                 <div class="menu">
-                    <div class="item" data-value="K" data-text="K">
+                    <div class="item" data-value="1" data-text="K">
                         <i class="square red icon"></i> K (Valid)
                     </div>
-                    <div class="item" data-value="Q" data-text="Q">
-                        <i class="square green icon"></i> Q (Span)
+                    <div class="item" data-value="2" data-text="Q">
+                        <i class="square orange icon"></i> Q (Span)
                     </div>
-                    <div class="item" data-value="N" data-text="N">
-                        <i class="square black icon"></i> N (Not representative)
-                    </div>
-                    <div class="item" data-value="P" data-text="P">
+                    <div class="item" data-value="8" data-text="P">
                         <i class="square grey icon"></i> P (Maintenance)
+                    </div>
+                    <div class="item" data-value="9" data-text="N">
+                        <i class="square black icon"></i> N (Not representative)
                     </div>
                 </div>
             </div>
 
             <div class="description">
-                <p>Flag will be changed for the follwoing selected Points:</p>
-                <ul>
-                    {{#each points}} 
-                    {{> point}}
-                    {{/each}}
-                </ul>
+                <p>Flag(s) will be changed for the follwoing selected Points:</p>
+                <div class="ui list">
+                    {{#each points}} {{> point}} {{/each}}
+                </div>
             </div>
         </div>
         <div class="actions">
@@ -68,5 +67,5 @@
 </template>
 
 <template name="point">
-    <li>{{formatDate x}} from {{Flag}} to {{flagSelected}}</li>
+    <div class="item">{{formatDate x}} from {{flag.label}} ({{flag.description}}) to {{flagSelected}}</div>
 </template>

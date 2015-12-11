@@ -332,14 +332,21 @@ Meteor.methods({
         logger.info('Helper called 5minAgg for site: ', siteId, ' start: ', startEpoch, ' end: ', endEpoch);
         perform5minAggregat(siteId, startEpoch, endEpoch);
     },
-    insertUpdateFlag: function (siteId, epoch, instrument, flag) {
-        
+    insertUpdateFlag: function (siteId, epoch, instrument, measurement, flag) {
+        //id that will receive the update
         var id = siteId + '_' + epoch/1000; //seconds
-        var updateStr = 'subTypes.' + instrument + 'conc.3.val';
-        //var updateQuery = {subTypes[instrument].conc.3.val: flag};
-        console.log('updateStr: ', updateStr);
-        AggrData.update({_id: id}, {$push: {'subTypes.O3.conc': {val: flag}}});
-                       
+        //new field
+        var insertField = 'subTypes.' + instrument + '.' + measurement.split(/[ ]+/)[0];
+        //update value
+        var qry = {};
+        qry.$push = {};
+        qry.$push[insertField] = {};
+        qry.$push[insertField].val = flag;
+        qry.$push[insertField].metric = 'Overwrite Flag';
+        qry.$push[insertField].user = 'peggy';
+        qry.$push[insertField].note = 'test';
+        console.log('query: ', qry);
+        AggrData.update({_id: id}, qry);
                        
         
     }

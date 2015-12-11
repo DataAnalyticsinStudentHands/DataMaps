@@ -17,7 +17,7 @@ if (Meteor.isServer) {
       ];
       sites.forEach(function (site) {
         Sites.insert(site);
-      })
+      });
     }
   });
 }
