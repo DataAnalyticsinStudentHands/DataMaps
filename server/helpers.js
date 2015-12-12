@@ -75,6 +75,8 @@ var exportDataAsCSV = Meteor.bindEnvironment(function (aqsid, startEpoch, endEpo
                 console.log('file saved');
             });
         });
+        
+        return dataObject;
     } else {
         logger.info('Could not find dir for AQSID: ', aqsid, ' in Monitors.');
     }
@@ -83,7 +85,7 @@ var exportDataAsCSV = Meteor.bindEnvironment(function (aqsid, startEpoch, endEpo
 
 Meteor.methods({
     exportData: function (site, startEpoch, endEpoch) {
-        logger.info('Helper called for site: ', site, ' and start: ', startEpoch, ' and end: ', endEpoch);
-        exportDataAsCSV(site, startEpoch, endEpoch);
+        logger.info('Helper called export for site: ', site, ' and start: ', startEpoch, ' and end: ', endEpoch);
+        return exportDataAsCSV(site, startEpoch, endEpoch);
     }
 });

@@ -106,6 +106,7 @@
         "DataSeries": false,
         "Sites": false,
         "Kadira": false,
+        "DataExporter": false,
         "bulkCollectionUpdate": false,
         "ReactiveVar": false,
         "ReactiveDict": false,

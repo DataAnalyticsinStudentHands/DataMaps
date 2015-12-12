@@ -1,7 +1,6 @@
 var startEpoch = new ReactiveVar(moment().subtract(1, 'days').unix()); //24 hours ago - seconds
 var endEpoch = new ReactiveVar(moment().unix());
 
-
 //simple template to test server functions
 Template.passData.helpers({
     result: function () {
@@ -36,24 +35,6 @@ Template.passData.events = {
                 return;
             }
             Session.set('serverDataResponse', response);
-        });
-    },
-    'click #exportDataResult': function () {
-        Meteor.call('exportData', $('#site').val(), $('#startexport').val(), $('#endexport').val(), function (err, response) {
-            if (err) {
-                Session.set('serverExportDataResponse', 'Error:' + err.reason);
-                return;
-            }
-            Session.set('serverExportDataResponse', response);
-        });
-    },
-    'click #updateFlag': function () {
-        Meteor.call('updateFlag', $('#site').val(), $('#epoch').val(), $('#flag').val(), function (err, response) {
-            if (err) {
-                Session.set('serverUpdateFlagResponse', 'Error:' + err.reason);
-                return;
-            }
-            Session.set('serverUpdateFlagDataResponse', response);
         });
     }
 };

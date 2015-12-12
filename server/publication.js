@@ -21,9 +21,9 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                     }]
             }
         },
-        {
-            $limit: 5 //testingpubsub
-        },
+//       {
+//            $limit: 5 //testingpubsub
+//        },
         {
             $sort: {
                 epoch: 1
@@ -57,14 +57,13 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                             if (!poll5Data[subType][key]) { //create placeholder if not exists
                                 poll5Data[subType][key] = [];
                             }
-
-                            if (key.indexOf('Flag') < 0) { //get all measurements
-                                console.log('key: ', key);
+                            
+                            if (_.last(sub).metric.indexOf('Flag') >= 0) { //get all measurements
                                 var datapoint = {
                                     x: epoch * 1000,
                                     y: sub[1].val,
                                     color: flagColors[_.last(sub).val], //the last element contains the latest flag
-                                    name: _.last(sub).val
+                                    name: _.last(sub).val //will use the name of the point to hold the flag value
                                 }; //milliseconds
                                 poll5Data[subType][key].push(datapoint);
                             }

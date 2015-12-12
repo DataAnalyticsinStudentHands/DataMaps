@@ -1,4 +1,4 @@
-var startEpoch = new ReactiveVar(moment().subtract(1, 'days').unix()); //24 hours ago - seconds
+var startEpoch = new ReactiveVar(moment().subtract(1439, 'minutes').unix()); //24 hours ago - seconds
 var endEpoch = new ReactiveVar(moment().unix());
 var selectedFlag = new ReactiveVar(1);
 var trigger = new ReactiveVar('on');
@@ -312,14 +312,6 @@ Template.site.onRendered(function () {
                     inputEnabled: false,
                     allButtonsEnabled: true,
                     buttons: [{
-                        type: 'month',
-                        count: 3,
-                        text: 'Day',
-                        dataGrouping: {
-                            forced: true,
-                            units: [['day', [1]]]
-                        }
-			    }, {
                         type: 'minute',
                         count: 60,
                         text: 'Hour',
@@ -328,11 +320,21 @@ Template.site.onRendered(function () {
                             units: [['hour', [60]]]
                         }
 			    }, {
-                        type: 'all',
-                        text: 'All',
+                        type: 'day',
+                        count: 3,
+                        text: '3 Days',
                         dataGrouping: {
                             forced: true,
                             units: [['month', [1]]]
+                        }
+			    },
+                             {
+                        type: 'day',
+                        count: 1,
+                        text: '1 Day',
+                        dataGrouping: {
+                            forced: true,
+                            units: [['day', [1]]]
                         }
 			    }],
                     buttonTheme: {
@@ -395,6 +397,9 @@ Template.site.helpers({
 Template.site.events({
     'change #datepicker': function (event) {
         startEpoch.set(moment(event.target.value, 'YYYY-MM-DD').unix());
-        endEpoch.set(moment.unix(startEpoch.get()).add(1, 'days').unix()); //always to current?
-    }
+        endEpoch.set(moment.unix(startEpoch.get()).add(1439, 'minutes').unix()); //always to current?
+    },
+    'click #createPush': function() {
+		DataExporter.exportForTCEQ(Router.current().params._id, startEpoch.get(), endEpoch.get());
+	}
 });
