@@ -228,7 +228,8 @@ Template.site.onRendered(function () {
                     style: {
                         color: Highcharts.getOptions().colors[0]
                     }
-                }
+                },
+                startOnTick: false
             }];
 
             if (series.length > 2) {
@@ -245,7 +246,8 @@ Template.site.onRendered(function () {
                             color: Highcharts.getOptions().colors[1]
                         }
                     },
-                    opposite: false
+                    opposite: false,
+                    startOnTick: false
                 });
                 for (var i = 0; i < series.length; i++) {
                     //put axis for each series

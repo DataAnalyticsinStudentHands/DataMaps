@@ -6,6 +6,7 @@ var logger = Meteor.npmRequire('winston'); // this retrieves default logger whic
 
 var perform5minAggregat = function (siteId, startEpoch, endEpoch) {
 
+    //gather all data, group by 5min epoch
     var pipeline = [
         {
             $match: {
@@ -76,7 +77,6 @@ var perform5minAggregat = function (siteId, startEpoch, endEpoch) {
                                         if (data[j].metric === 'Speed') {
                                             windSpd = data[j].val;
                                         }
-
                                     }
                                     //Convert wind speed and wind direction waves into wind north and east component vectors
                                     var windNord = Math.cos(windDir / 180 * Math.PI) * windSpd;

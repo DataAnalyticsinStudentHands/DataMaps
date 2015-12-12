@@ -57,7 +57,6 @@ Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
                             if (!poll5Data[subType][key]) { //create placeholder if not exists
                                 poll5Data[subType][key] = [];
                             }
-                            
                             if (_.last(sub).metric.indexOf('Flag') >= 0) { //get all measurements
                                 var datapoint = {
                                     x: epoch * 1000,
