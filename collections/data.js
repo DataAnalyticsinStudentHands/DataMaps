@@ -13,7 +13,8 @@ if (Meteor.isServer) {
       var sites = [
         {_id: '482010570', name: 'Clear Brooke Highschool'},
         {_id: '481670571', name: 'Clear Creek Highschool'},
-        {_id: '482010572', name: 'Clear Lake Highschool'}
+        {_id: '482010572', name: 'Clear Lake Highschool'},
+        {_id: '482010572', name: 'Smith Point'}
       ];
       sites.forEach(function (site) {
         Sites.insert(site);
