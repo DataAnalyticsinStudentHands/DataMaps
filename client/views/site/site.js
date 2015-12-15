@@ -1,7 +1,6 @@
 var startEpoch = new ReactiveVar(moment().subtract(1439, 'minutes').unix()); //24 hours ago - seconds
 var endEpoch = new ReactiveVar(moment().unix());
 var selectedFlag = new ReactiveVar(1);
-var trigger = new ReactiveVar('on');
 
 Meteor.subscribe('sites');
 
@@ -138,11 +137,7 @@ function selectedPoints(e) {
             var updatedPoints = EditPoints.find({});
             updatedPoints.forEach(function (point) {
                 Meteor.call('insertUpdateFlag', point.site, point.x, point.instrument, point.measurement, newFlagVal);
-            });
-            
-            trigger.set(Math.random().toString(36).substring(7));
-                
-                     
+            });                     
         }
     }).modal('show');
 }
@@ -172,8 +167,7 @@ Template.site.onRendered(function () {
         console.log('auto counter:', autoCounter);
         console.log('site: ', Router.current().params._id, 'start: ', startEpoch.get(), 'end: ', endEpoch.get());
         Meteor.subscribe('dataSeries', Router.current().params._id, startEpoch.get(), endEpoch.get());
-        
-        trigger.get();
+        Meteor.subscribe('aggregatedata5min');
 
         var seriesOptions = {};
         Charts.remove({});
@@ -228,8 +222,7 @@ Template.site.onRendered(function () {
                     style: {
                         color: Highcharts.getOptions().colors[0]
                     }
-                },
-                startOnTick: false
+                }
             }];
 
             if (series.length > 2) {
@@ -246,8 +239,7 @@ Template.site.onRendered(function () {
                             color: Highcharts.getOptions().colors[1]
                         }
                     },
-                    opposite: false,
-                    startOnTick: false
+                    opposite: false
                 });
                 for (var i = 0; i < series.length; i++) {
                     //put axis for each series

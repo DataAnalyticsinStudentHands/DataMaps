@@ -1,5 +1,16 @@
 var flagColors = ['white', 'red', 'orange', 'orange', 'orange', 'orange', 'white', 'white', 'grey', 'black'];
 
+Meteor.publish('aggregatedata5min', function (site, startEpoch, endEpoch) {
+    return AggrData.find({
+        site: site
+    }, {
+        epoch: {
+            $gt: parseInt(startEpoch, 10),
+            $lt: parseInt(endEpoch, 10)
+        }
+    });
+});
+
 //aggregation of live and aggregated data to be plotted with highstock
 Meteor.publish('dataSeries', function (site, startEpoch, endEpoch) {
 
@@ -182,7 +193,11 @@ Meteor.publish('compositeSeries', function (siteList, startEpoch, endEpoch) {
     var agg5Pipe = [
         {
             $match: {
-                $and: [{ site: { $in: siteList} },
+                $and: [{
+                        site: {
+                            $in: siteList
+                        }
+                    },
                     {
                         epoch: {
                             $gt: parseInt(startEpoch, 10),
@@ -202,19 +217,19 @@ Meteor.publish('compositeSeries', function (siteList, startEpoch, endEpoch) {
         {
             $group: {
                 _id: '$subTypes'
-//                series: {
-//                    $push: {
-//                        'subTypes': '$subTypes',
-//                        'epoch': '$epoch'
-//                    }
-//                }
+                    //                series: {
+                    //                    $push: {
+                    //                        'subTypes': '$subTypes',
+                    //                        'epoch': '$epoch'
+                    //                    }
+                    //                }
             }
         }
 	];
 
     AggrData.aggregate(agg5Pipe, function (err, result) {
             //create new structure for data series to be used for charts
-            if (result.length > 0) {                
+            if (result.length > 0) {
                 _.each(result, function (line) {
                     var epoch = line.epoch;
                     _.each(line.subTypes, function (subKey, subType) { //subType is O3, etc.              
