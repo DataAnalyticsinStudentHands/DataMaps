@@ -16,10 +16,11 @@ On Mac OS or Linux:
 
 `curl https://install.meteor.com/ | sh`
 
-* Data Folder: It expects a certain data folder structure. `/hnet/incoming/current` + `/hnet/outgoing/current` should exist.
+* Data Folder with correct permissions: A certain data folder structure is expected. `/hnet/incoming/current` + `/hnet/outgoing` should exist. Also, folders for incoming data from each site need to exists when sites have been created.
 
-For pushing data out the server is using [lftp](https://lftp.yar.ru/) which must be installed.
+* For pushing data out, the server is using [lftp](https://lftp.yar.ru/) which must be installed.
 
+Note: The bootstraping data that is in the repository doesn't work correctly if the data folder have not been setup correctly.
 
 ## Getting started
 
@@ -43,4 +44,4 @@ For debugging with node inspector run `MONGO_URL=mongodb://localhost:27017/DataM
 * move the file to the install location nd extract it (you will end up with a `bundle` directory
 * `cd bundle/programs/server/` and `npm install`
 * generate a configuration file for PM2 (see example [gist](https://gist.github.com/fcbee3b520b4fdf97552.git)) outside of bundle
-* run `pm2 start [your_pm2_conf_file] --node-args="--max_old_space_size=6144"`
+* run `pm2 start [your_pm2_conf_file] --node-args="--max_old_space_size=8192"`
