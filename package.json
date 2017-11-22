@@ -14,8 +14,7 @@
     "junk": "^1.0.3"
   },
   "scripts": {
-    "sensorReceive": "meteor run --port 3000",
-    "editService": "meteor run --port 3001",
+    "dev": "meteor run --port 3000",
     "lint": "eslint .",
     "pretest": "npm run lint --silent"
   },
