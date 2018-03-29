@@ -24,8 +24,8 @@ Note: The bootstraping data that is in the repository doesn't work correctly if 
 
 ## Getting started
 
-You may have to run the following:
-* `meteor npm install --save highcharts ftps junk fs-extra chokidar fsevents`
+Run the following:
+* `meteor npm install`
 
 ## Testing in local development environment
 
