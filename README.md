@@ -1,10 +1,12 @@
 # DataMaps
 
-This is a development repository.
+This is an old development repository. We are currently working on a new version.
+
+The currently active branches are reserach_sensorreceive and research_client.
 
 ## Prerequisites
 
-* We are running with a local [MongoDB](https://docs.mongodb.org/manual/installation/)
+* Datamaps running with a local [MongoDB](https://docs.mongodb.org/manual/installation/)
 
 On Mac OS install via [homebrew](http://brew.sh/):
 
