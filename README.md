@@ -2,7 +2,7 @@
 
 This is the web frontend for a data processing framework for atmospheric sensors who can monitor and edit their data.
 
-The documentation for end users can be found in the Wiki at 
+The documentation for end users can be found in the [Wiki](https://github.com/DataAnalyticsinStudentHands/HNETDataMaps/wiki).
 
 The following instructions are for developers who want to setup their own version. This is a [meteor](https://www.meteor.com/) based framework.
 
