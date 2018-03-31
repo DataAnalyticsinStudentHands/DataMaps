@@ -1,14 +1,14 @@
-# HNETDataMaps Client
+# DataMaps Client
 
 This is the web frontend for a data processing framework for atmospheric sensors who can monitor and edit their data.
 
-The documentation for end users can be found in the Wiki.
+The documentation for end users can be found in the Wiki at 
 
 The following instructions are for developers who want to setup their own version. This is a [meteor](https://www.meteor.com/) based framework.
 
 ## Prerequisites
 
-* Data Folder: The framework expects a certain data folder structure. `/hnet/incoming/current` + `/hnet/outgoing/current` should exist. Those locations are hard coded and need be changed if desired.
+* Data Folder: The framework expects a certain data folder structure. `/hnet/outgoing/current` should exist. This location is hard coded and need be changed if desired.
 
 * We are running with a local [MongoDB](https://docs.mongodb.org/manual/installation/)
 
