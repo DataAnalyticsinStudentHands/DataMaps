@@ -1,0 +1,95 @@
+[
+  {
+    "_id" : "57d95ffc3004eaffb76f9b41",
+    "AQSID" : "482010570",
+    "loc" : {
+        "type" : "Point",
+        "coordinates" : [
+            -95.1853,
+            29.5489
+        ]
+    },
+    "siteName" : "Clear Brook High School C570",
+    "incoming" : "UHCBH_DAQData",
+    "lastUpdateEpoch" : 0,
+    "lastPushEpoch" : 0,
+    "GMT offset" : "-6.00",
+    "agencyID" : "TX1",
+    "country" : "US",
+    "state" : "TX",
+    "status" : "Active",
+    "site code" : "0570",
+    "city": "Houston",
+    "statusCheckInterval" : 30,
+    "compositeColor" : "#ffa500",
+    "Channels" : [
+        {
+            "Name" : "O3conc",
+            "Header" : "Ozone",
+            "Status" : "Inactive"
+        }
+    ]
+},
+{
+    "_id" : "57d95ffc3004eaffb76f9b42",
+    "AQSID" : "482010572",
+    "loc" : {
+        "type" : "Point",
+        "coordinates" : [
+            -95.105,
+            29.5833
+        ]
+    },
+    "siteName" : "Clear Lake High School C572",
+    "incoming" : "UHCLH_DAQData",
+    "lastUpdateEpoch" : 0,
+    "lastPushEpoch" : 0,
+    "GMT offset" : "-6.00",
+    "agencyID" : "TX1",
+    "country" : "US",
+    "state" : "TX",
+    "status" : "Inactive",
+    "site code" : "0572",
+    "city": "Houston",
+    "statusCheckInterval" : 30,
+    "compositeColor" : "#ffa500",
+    "Channels" : [
+        {
+            "Name" : "O3conc",
+            "Header" : "Ozone",
+            "Status" : "Inactive"
+        }
+    ]
+},
+{
+    "_id" : "57d95ffc3004eaffb76f9b45",
+    "AQSID" : "481670571",
+    "loc" : {
+        "type" : "Point",
+        "coordinates" : [
+            -95.0706,
+            29.5256
+        ]
+    },
+    "siteName" : "Clear Creek High School C571",
+    "incoming" : "UHCCH_DAQData",
+    "lastUpdateEpoch" : 0,
+    "lastPushEpoch" : 0,
+    "GMT offset" : "-6.00",
+    "agencyID" : "TX1",
+    "country" : "US",
+    "state" : "TX",
+    "status" : "Inactive",
+    "site code" : "0571",
+    "city": "Houston",
+    "compositeColor" : "#ffa500",
+    "statusCheckInterval" : 30,
+    "Channels" : [
+        {
+            "Name" : "O3conc",
+            "Header" : "Ozone",
+            "Status" : "Inactive"
+        }
+    ]
+}
+]

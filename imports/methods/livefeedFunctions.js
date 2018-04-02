@@ -1,4 +1,3 @@
-import chokidar from 'chokidar';
 import fs from 'fs-extra';
 import pathModule from 'path';
 import { Meteor } from 'meteor/meteor';
@@ -8,7 +7,6 @@ import { moment } from 'meteor/momentjs:moment';
 import { Papa } from 'meteor/harrison:papa-parse';
 import { bulkCollectionUpdate } from 'meteor/udondan:bulk-collection-update';
 import { LiveSites, LiveData, AggrData } from '../api/collections_server';
-import { globalsite } from '../startup/startup';
 
 function perform5minAggregat(siteId, startEpoch, endEpoch) {
   // create temp collection as placeholder for aggreagation results
@@ -553,7 +551,7 @@ var batchMetDataUpsert = Meteor.bindEnvironment(function(parsedLines, path) {
   }
 });
 
-const readFile = Meteor.bindEnvironment((path) => {
+export const readFile = Meteor.bindEnvironment((path) => {
   // test whether the siteId in the file name matches the directory
   const pathArray = path.split(pathModule.sep);
   const fileName = pathArray[pathArray.length - 1];
@@ -600,25 +598,4 @@ const readFile = Meteor.bindEnvironment((path) => {
   } else {
     logger.error('File has been added in not matching directory.');
   }
-});
-
-const liveWatcher = chokidar.watch(`/hnet/incoming/current/${globalsite.incoming}`, {
-  ignored: /[\/\\]\./,
-  ignoreInitial: true,
-  usePolling: true,
-  persistent: true
-});
-
-liveWatcher.on('add', (path) => {
-  logger.info('File ', path, ' has been added.');
-  //readFile(path);
-}).on('change', (path) => {
-  logger.info('File', path, 'has been changed');
-  //readFile(path);
-}).on('addDir', (path) => {
-  logger.info('Directory', path, 'has been added');
-}).on('error', (error) => {
-  logger.error('Error happened', error);
-}).on('ready', () => {
-  logger.info(`Ready for changes in /hnet/incoming/current/${globalsite.incoming}`);
 });

@@ -1,7 +1,7 @@
 {
-  "name": "hnet_data_maps_server",
-  "version": "0.9.0",
-  "description": "DASH HNET DataMaps - a real time analysis & visualization frame work for sensor data",
+  "name": "data_maps_research_sensorreceive",
+  "version": "0.1.0",
+  "description": "DASH DataMaps - a real time analysis & visualization frame work for sensor data",
   "main": "main.html",
   "dependencies": {
     "bcrypt": "^0.8.7",
