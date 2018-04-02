@@ -1,0 +1,10 @@
+[
+  { "_id" : "vgps83gQt3JGrtaZj",
+     "createdAt" : { "date" : "2018-03-31T02:40:08.040+0000" },
+     "services" :
+     { "password" :
+       { "bcrypt" : "$2a$10$i4ebyDE0Ty1jD0/yGDhBwerdt9J0AnktJrmGIAv1u6HJDP501MH1q",
+         "reset" : { "token" : "G9xcuU8Dci94ztdmQsa-Bd0sB_TT3UZQsC0bzIMMql4",
+          "email" : "test@test.com", "when" : { "date" : "2018-03-31T02:40:08.051+0000" } } },
+          "resume" : { "loginTokens" : [ { "when" : { "date" : "2018-03-31T02:40:51.305+0000" }, "hashedToken" : "5XnxX0NZrfrwJ8kjcvjAM3UvgzhNGewzygxphmfr5mU=" } ] } }, "emails" : [ { "address" : "test@test.com", "verified" : false } ], "roles" : { "__global_roles__" : [ "admin" ] } }
+]
